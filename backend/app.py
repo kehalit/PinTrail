@@ -1,29 +1,11 @@
 
-from flask import Flask, jsonify, request
-from flask_cors import CORS
-from sqlalchemy.ext.declarative import DeferredReflection
+from flask import Flask, jsonify,render_template,request, redirect, url_for, flash, session
+from datamanager.sqllite_data_manager import SQLiteDataManager
+from werkzeug.exceptions import HTTPException
+
 
 app = Flask(__name__)
-CORS(app)
-
-trips = [
-    {
-        "id": 1,
-        "title": "Italy Trip",
-        "country": "Italy",
-        "activities": ["Visited Colosseum", "Ate pasta in Rome"],
-        "is_public": True
-    },
-
-    {
-        "id": 2,
-        "title": "Japan Trip",
-        "country": "Japan",
-        "activities": ["Visited Tokyo", "Mount picano"],
-        "is_public": True
-    }
-]
-
+db_manager = SQLiteDataManager(app)
 
 @app.route("/")
 def home():
@@ -31,26 +13,40 @@ def home():
     return "Welcome to PinTrail API!"
 
 
-@app.route("/trips", methods=["GET"])
-def get_trips():
-    """GET all trips"""
-    return jsonify(trips)
-
-
 @app.route("/add_trips", methods=["POST"])
-def add_new_trips():
-    """Handle adding a new trip """
-    data = request.json
-    new_id = len(trips) + 1
-    new_trip = { "id" : new_id,
-                 "title":data.get("title"),
-                 "country":data.get("country"),
-                 "activities": data.get("activities", []),
-                 "is_public":data.get("is_public", True)
+def add_new_trip():
+    """Handle adding a new trip to the database."""
+    try:
+        data = request.get_json()
+        new_trip = db_manager.add_trip(data)
 
-    }
-    trips.append(new_trip)
-    return jsonify(new_trip), 201
+        return jsonify({
+            "id": new_trip.id,
+            "title": new_trip.title,
+            "user_id": new_trip.user_id,
+            "country": new_trip.country,
+            "city": new_trip.city,
+            "start_date": new_trip.start_date.isoformat(),
+            "end_date": new_trip.end_date.isoformat(),
+            "description": new_trip.description,
+            "notes": new_trip.notes,
+            "is_public": new_trip.is_public,
+            "activities": [
+                {
+                    "id": a.id,
+                    "name": a.name,
+                    "location": a.location,
+                    "type": a.type,
+                    "notes": a.notes,
+                    "cost": a.cost,
+                    "rating": a.rating,
+                    "trip_id": a.trip_id
+                } for a in new_trip.activities
+            ]
+        }), 201
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
 
 
 @app.route("/trips/<int:trip_id>", methods=["GET"])
@@ -85,3 +81,5 @@ def delete_trip(trip_id):
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+
