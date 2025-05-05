@@ -60,6 +60,12 @@ class SQLiteDataManager(DataManagerInterface):
     def get_trips(self):
         return Trip.query.all()
 
+    def get_trip_by_id(self, trip_id):
+        trip = Trip.query.get(trip_id)
+        if trip:
+            return trip
+        return None
+
     def get_all_users(self):
         return User.query.all()
 
