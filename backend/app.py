@@ -49,6 +49,41 @@ def add_new_trip():
         return jsonify({"error": str(e)}), 400
 
 
+@app.route("/trips", methods=["GET"])
+def get_trips():
+    """GET all trips"""
+    try:
+        trips = db_manager.get_trips()
+        return jsonify([
+            {
+            "id": trip.id,
+            "title": trip.title,
+            "user_id": trip.user_id,
+            "country": trip.country,
+            "city": trip.city,
+            "start_date": trip.start_date.isoformat(),
+            "end_date": trip.end_date.isoformat(),
+            "description": trip.description,
+            "notes": trip.notes,
+            "is_public": trip.is_public,
+            "activities": [
+                {
+                    "id": a.id,
+                    "name": a.name,
+                    "location": a.location,
+                    "type": a.type,
+                    "notes": a.notes,
+                    "cost": a.cost,
+                    "rating": a.rating,
+                    "trip_id": a.trip_id
+                } for a in trip.activities
+            ]
+        } for trip in trips
+    ])
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/trips/<int:trip_id>", methods=["GET"])
 def get_trip(trip_id):
     """ Handle adding a single trip by ID """
