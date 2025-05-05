@@ -49,7 +49,7 @@ class Trip(db.Model):
             "description": self.description,
             "notes": self.notes,
             "is_public": self.is_public,
-            "activities": [a.to_dict() for a in self.activities],
+            "activities": [activity.to_dict() for activity in self.activities] if self.activities else [],
             "photos": [p.to_dict() for p in self.photos]
         }
 
