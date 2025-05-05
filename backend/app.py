@@ -93,6 +93,19 @@ def get_trip(trip_id):
     return jsonify({"error": "Trip not found"}), 404
 
 
+@app.route("/trips/<int:trip_id>", methods=["GET"])
+def get_trip(trip_id):
+    """ Handle adding a single trip by ID """
+    try:
+        trip = db_manager.get_trip_by_id(trip_id)
+        if trip:
+            return jsonify(trip.to_dict()), 200
+        else:
+            return jsonify({"error": "Trip not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route("/trips/<int:trip_id>", methods=["PUT"])
 def update_trip(trip_id):
     """Handles the trip update for a specific trip_id"""
