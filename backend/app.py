@@ -87,15 +87,6 @@ def get_trips():
 @app.route("/trips/<int:trip_id>", methods=["GET"])
 def get_trip(trip_id):
     """ Handle adding a single trip by ID """
-    trip = next((trip for trip in trips if trip["id"] == trip_id), None)
-    if trip:
-        return jsonify(trip)
-    return jsonify({"error": "Trip not found"}), 404
-
-
-@app.route("/trips/<int:trip_id>", methods=["GET"])
-def get_trip(trip_id):
-    """ Handle adding a single trip by ID """
     try:
         trip = db_manager.get_trip_by_id(trip_id)
         if trip:
@@ -106,17 +97,18 @@ def get_trip(trip_id):
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/trips/<int:trip_id>", methods=["PUT"])
+@app.route('/trips/<int:trip_id>', methods=['PUT'])
 def update_trip(trip_id):
-    """Handles the trip update for a specific trip_id"""
-    data = request.json
-    for trip in trips:
-        if trip["id"] == trip_id:
-            trip["title"] = data.get("title", trip["title"])
-            trip["activities"] = data.get("activities", trip["activities"])
-            trip["is_public"] = data.get("is_public", trip["is_public"])
-            return jsonify(trip)
-    return jsonify({"error": "Trip not found"}), 404
+    """update a trip by using tip id"""
+    try:
+        data = request.get_json()
+        updated_trip = db_manager.update_trip(trip_id, data)
+        if updated_trip:
+            return jsonify(updated_trip.to_dict()), 200
+        else:
+            return jsonify({"error": "Trip not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/trips/<int:trip_id>", methods=["DELETE"])
