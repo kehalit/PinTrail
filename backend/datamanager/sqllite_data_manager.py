@@ -19,6 +19,15 @@ class SQLiteDataManager(DataManagerInterface):
         with app.app_context():
             db.create_all()
 
+    def get_trips(self):
+        return Trip.query.all()
+
+    def get_trip_by_id(self, trip_id):
+        trip = Trip.query.get(trip_id)
+        if trip:
+            return trip
+        return None
+
     def add_trip(self, data):
         try:
             new_trip = Trip(
@@ -50,27 +59,36 @@ class SQLiteDataManager(DataManagerInterface):
                 db.session.add(activity)
 
             db.session.commit()
-
             return new_trip
 
         except Exception as e:
             db.session.rollback()
             raise e
 
-    def get_trips(self):
-        return Trip.query.all()
-
-    def get_trip_by_id(self, trip_id):
-        trip = Trip.query.get(trip_id)
-        if trip:
-            return trip
-        return None
 
     def get_all_users(self):
         return User.query.all()
 
     def get_user_by_id(self, user_id):
         return User.query.get(user_id)
+
+    def update_trip(self, trip_id, data):
+        trip = Trip.query.get(trip_id)
+        if not trip:
+            return None
+
+        for field in ['title', 'country', 'city', 'start_date', 'end_date', 'description', 'notes', 'is_public']:
+            if field in data:
+                setattr(trip, field, data[field])
+
+        if 'activities' in data:
+            trip.activities.clear()
+            for activity_data in data['activities']:
+                activity = Activity(**activity_data)
+                trip.activities.append(activity)
+
+        db.session.commit()
+        return trip
 
     def get_trips_by_user(self, user_id):
         return Trip.query.filter_by(user_id=user_id).all()
