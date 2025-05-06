@@ -65,7 +65,6 @@ class SQLiteDataManager(DataManagerInterface):
             db.session.rollback()
             raise e
 
-
     def get_all_users(self):
         return User.query.all()
 
@@ -89,6 +88,14 @@ class SQLiteDataManager(DataManagerInterface):
 
         db.session.commit()
         return trip
+
+    def delete_trip(self, trip_id):
+        trip = Trip.query.get(trip_id)
+        if not trip:
+            return False
+        db.session.delete(trip)
+        db.session.commit()
+        return True
 
     def get_trips_by_user(self, user_id):
         return Trip.query.filter_by(user_id=user_id).all()
