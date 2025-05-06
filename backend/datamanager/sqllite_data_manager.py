@@ -3,6 +3,7 @@ from .data_manager_interface import DataManagerInterface
 from .data_models  import db, User, Trip, Activity, Photo
 from pathlib import Path
 from datetime import datetime
+from werkzeug.security import generate_password_hash
 
 # Database configuration
 basedir = Path(__file__).resolve().parent.parent
@@ -65,12 +66,6 @@ class SQLiteDataManager(DataManagerInterface):
             db.session.rollback()
             raise e
 
-    def get_all_users(self):
-        return User.query.all()
-
-    def get_user_by_id(self, user_id):
-        return User.query.get(user_id)
-
     def update_trip(self, trip_id, data):
         trip = Trip.query.get(trip_id)
         if not trip:
@@ -99,6 +94,41 @@ class SQLiteDataManager(DataManagerInterface):
 
     def get_trips_by_user(self, user_id):
         return Trip.query.filter_by(user_id=user_id).all()
+
+    # Create a new user
+    def add_user(self, username, email, password):
+        hashed_password = generate_password_hash(password)
+        new_user = User(username=username, email=email, password_hash=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
+        return new_user
+
+    # Get all users
+    def get_all_users(self):
+        return User.query.all()
+
+    # Get a user by ID
+    def get_user_by_id(self, user_id):
+        return User.query.get(user_id)
+
+    # Update a user
+    def update_user(self, user_id, updated_data):
+        user = User.query.get(user_id)
+        if not user:
+            return None
+        for key, value in updated_data.items():
+            setattr(user, key, value)
+        db.session.commit()
+        return user
+
+    # Delete a user
+    def delete_user(self, user_id):
+        user = User.query.get(user_id)
+        if not user:
+            return False
+        db.session.delete(user)
+        db.session.commit()
+        return True
 
     def add_activity_to_trip(self, trip_id, activity_data):
         activity = Activity(**activity_data, trip_id=trip_id)
