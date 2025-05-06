@@ -99,7 +99,7 @@ def get_trip(trip_id):
 
 @app.route('/trips/<int:trip_id>', methods=['PUT'])
 def update_trip(trip_id):
-    """update a trip by using tip id"""
+    """update a trip by using tirp id"""
     try:
         data = request.get_json()
         updated_trip = db_manager.update_trip(trip_id, data)
@@ -113,11 +113,75 @@ def update_trip(trip_id):
 
 @app.route('/trips/<int:trip_id>', methods=['DELETE'])
 def delete_trip(trip_id):
+    """delete a trip by using trip id """
     success = db_manager.delete_trip(trip_id)
     if success:
         return jsonify({"message": f"Trip {trip_id} deleted successfully."}), 200
     else:
         return jsonify({"error": f"Trip {trip_id} not found."}), 404
+
+
+@app.route('/users', methods=['POST'])
+def add_user():
+    try:
+        data = request.get_json()
+        username = data.get('username')
+        email = data.get('email')
+        password = data.get('password')
+
+        if not username or not email or not password:
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        new_user = db_manager.add_user(username, email, password)
+
+        return jsonify({
+            'id': new_user.id,
+            'username': new_user.username,
+            'email': new_user.email
+        }), 201
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/users', methods=['GET'])
+def get_users():
+    users = db_manager.get_all_users()
+    return jsonify([
+        { "id": user.id, "username": user.username, "email": user.email}
+        for user in users
+    ])
+
+
+@app.route('/users/<int:user_id>', methods=['GET'])
+def get_user(user_id):
+    user = db_manager.get_user(user_id)
+    if user:
+        return jsonify({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email
+        })
+    return jsonify({"error": "User not found"}), 404
+
+
+@app.route('/users/<int:user_id>', methods=['PUT'])
+def update_user(user_id):
+    data = request.get_json()
+    user = db_manager.update_user(user_id, data)
+    if user:
+        return jsonify({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email
+        })
+    return jsonify({"error": "User not found"}), 404
+
+
+@app.route('/users/<int:user_id>', methods=['DELETE'])
+def delete_user(user_id):
+    if db_manager.delete_user(user_id):
+        return jsonify({"message": "User deleted"})
+    return jsonify({"error": "User not found"}), 404
 
 
 if __name__ == "__main__":
