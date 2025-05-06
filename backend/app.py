@@ -111,12 +111,13 @@ def update_trip(trip_id):
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/trips/<int:trip_id>", methods=["DELETE"])
+@app.route('/trips/<int:trip_id>', methods=['DELETE'])
 def delete_trip(trip_id):
-    """Handles the deletion of a trip for a specific id."""
-    global trips
-    trips = [trip for trip in trips if trip["id"] != trip_id]
-    return jsonify({"message": "Trip deleted"}), 200
+    success = db_manager.delete_trip(trip_id)
+    if success:
+        return jsonify({"message": f"Trip {trip_id} deleted successfully."}), 200
+    else:
+        return jsonify({"error": f"Trip {trip_id} not found."}), 404
 
 
 if __name__ == "__main__":
