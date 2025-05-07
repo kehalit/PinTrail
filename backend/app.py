@@ -13,7 +13,7 @@ def home():
     return "Welcome to PinTrail API!"
 
 
-@app.route("/add_trips", methods=["POST"])
+@app.route("/add_trip", methods=["POST"])
 def add_new_trip():
     """Handle adding a new trip to the database."""
     try:
@@ -86,7 +86,7 @@ def get_trips():
 
 @app.route("/trips/<int:trip_id>", methods=["GET"])
 def get_trip(trip_id):
-    """ Handle adding a single trip by ID """
+    """ Handle getting a single trip by ID """
     try:
         trip = db_manager.get_trip_by_id(trip_id)
         if trip:
@@ -99,7 +99,7 @@ def get_trip(trip_id):
 
 @app.route('/trips/<int:trip_id>', methods=['PUT'])
 def update_trip(trip_id):
-    """update a trip by using tirp id"""
+    """update a trip by using trip id"""
     try:
         data = request.get_json()
         updated_trip = db_manager.update_trip(trip_id, data)
@@ -154,7 +154,7 @@ def get_users():
 
 @app.route('/users/<int:user_id>', methods=['GET'])
 def get_user(user_id):
-    user = db_manager.get_user(user_id)
+    user = db_manager.get_user_by_id(user_id)
     if user:
         return jsonify({
             "id": user.id,
@@ -182,6 +182,55 @@ def delete_user(user_id):
     if db_manager.delete_user(user_id):
         return jsonify({"message": "User deleted"})
     return jsonify({"error": "User not found"}), 404
+
+
+@app.route("/activities", methods=["GET"])
+def get_activities():
+    try:
+        activities = db_manager.get_activities()
+        return jsonify(activities), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/activities/<int:activity_id>', methods=['GET'])
+def get_activity(activity_id):
+    activity = db_manager.get_activity_by_id(activity_id)
+    if activity:
+        return jsonify(activity.to_dict()), 200
+    return jsonify({"error": "Activity not found"}), 404
+
+
+@app.route('/activities', methods=['POST'])
+def create_activity():
+    try:
+        activity_data = request.json
+        new_activity = db_manager.add_activity(activity_data)
+        return jsonify(new_activity.to_dict()), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route('/activities/<int:activity_id>', methods=['PUT'])
+def update_activity(activity_id):
+    try:
+        updates = request.json
+        updated_activity = db_manager.update_activity(activity_id, updates)
+        if updated_activity:
+            return jsonify(updated_activity.to_dict()), 200
+        return jsonify({"error": "Activity not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route('/activities/<int:activity_id>', methods=['DELETE'])
+def delete_activity(activity_id):
+    try:
+        success = db_manager.delete_activity(activity_id)
+        if success:
+            return jsonify({"message": "Activity deleted successfully"}), 200
+        return jsonify({"error": "Activity not found"}), 404
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
