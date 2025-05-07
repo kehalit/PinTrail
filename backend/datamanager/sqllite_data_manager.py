@@ -130,14 +130,45 @@ class SQLiteDataManager(DataManagerInterface):
         db.session.commit()
         return True
 
-    def add_activity_to_trip(self, trip_id, activity_data):
-        activity = Activity(**activity_data, trip_id=trip_id)
-        db.session.add(activity)
+    def add_activity(self, data):
+        new_activity = Activity(
+            name=data["name"],
+            type=data.get("type"),
+            location=data.get("location"),
+            cost=data.get("cost"),
+            notes=data.get("notes"),
+            rating=data.get("rating"),
+            trip_id=data["trip_id"]
+        )
+        db.session.add(new_activity)
+        db.session.commit()
+        return new_activity
+
+    def get_activities(self):
+        try:
+            activities = Activity.query.all()
+            return [activity.to_dict() for activity in activities]
+        except Exception as e:
+            print(f"Error fetching activities: {e}")
+            return []
+
+
+    def get_activity_by_id(self, activity_id):
+        return Activity.query.get(activity_id)
+
+    def update_activity(self, activity_id, updates):
+        activity = Activity.query.get(activity_id)
+        if not activity:
+            return None
+        for key, value in updates.items():
+            setattr(activity, key, value)
         db.session.commit()
         return activity
 
-    def add_photo_to_activity(self, activity_id, photo_data):
-        photo = Photo(**photo_data, activity_id=activity_id)
-        db.session.add(photo)
+    def delete_activity(self, activity_id):
+        activity = Activity.query.get(activity_id)
+        if not activity:
+            return False
+        db.session.delete(activity)
         db.session.commit()
-        return photo
+        return True
