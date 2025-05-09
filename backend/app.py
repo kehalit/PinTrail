@@ -6,6 +6,16 @@ from werkzeug.exceptions import HTTPException
 app = Flask(__name__)
 db_manager = SQLiteDataManager(app)
 
+
+def validate_fields(data, required_fields):
+    if not data:
+        return {"error": "Request must be in JSON format."}
+    missing = [field for field in required_fields if field not in data or data[field] is None]
+    if missing:
+        return {"error": f"Missing required field(s): {', '.join(missing)}"}
+    return None
+
+
 @app.route("/")
 def home():
     """
@@ -32,6 +42,15 @@ def add_new_trip():
     """
     try:
         data = request.get_json()
+        required_fields = [
+            "title", "user_id", "country", "city",
+            "start_date", "end_date", "description",
+            "notes", "is_public"
+        ]
+        error = validate_fields(data, required_fields)
+        if error:
+            return jsonify(error), 400
+
         new_trip = db_manager.add_trip(data)
 
         return jsonify({
