@@ -403,4 +403,4 @@ def delete_activity(activity_id):
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
