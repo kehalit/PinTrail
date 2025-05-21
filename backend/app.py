@@ -1,9 +1,18 @@
 from flask import Flask, jsonify, render_template, request, redirect, url_for, flash, session
+from flasgger import Swagger
 from datamanager.sqllite_data_manager import SQLiteDataManager
 from werkzeug.exceptions import HTTPException
 
 
 app = Flask(__name__)
+swagger = Swagger(app, template={
+    "swagger": "2.0",
+    "info": {
+        "title": "PinTrail API",
+        "description": "API documentation for the PinTrail travel app",
+        "version": "1.0"
+    }
+})
 db_manager = SQLiteDataManager(app)
 
 
@@ -20,9 +29,10 @@ def validate_fields(data, required_fields):
 def home():
     """
     Displays the home message for the API.
-
-    Returns:
-        str: A welcome message to indicate the API is running.
+    ---
+    responses:
+      200:
+        description: Welcome message
     """
     return "Welcome to PinTrail API!"
 
@@ -30,15 +40,54 @@ def home():
 @app.route("/add_trip", methods=["POST"])
 def add_new_trip():
     """
-    Adds a new trip to the database.
-
-    Expects:
-        JSON with fields: title, user_id, country, city, start_date, end_date,
-        description, notes, is_public, and a list of activities (optional).
-
-    Returns:
-        JSON with the newly created trip details and activities on success (201),
-        or an error message on failure (400).
+    Add a new trip
+    ---
+    tags:
+      - Trips
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          id: Trip
+          required:
+            - title
+            - user_id
+          properties:
+            title:
+              type: string
+              example: Summer in Italy
+            user_id:
+              type: integer
+              example: 1
+            country:
+              type: string
+              example: Italy
+            city:
+              type: string
+              example: Rome
+            start_date:
+              type: string
+              format: date
+              example: 2024-07-01
+            end_date:
+              type: string
+              format: date
+              example: 2024-07-10
+            description:
+              type: string
+              example: A wonderful vacation.
+            notes:
+              type: string
+              example: Pack light!
+            is_public:
+              type: boolean
+              example: true
+    responses:
+      201:
+        description: Trip successfully created
+      400:
+        description: Invalid input
     """
     try:
         data = request.get_json()
@@ -85,11 +134,15 @@ def add_new_trip():
 @app.route("/trips", methods=["GET"])
 def get_trips():
     """
-    Retrieves all trips from the database.
-
-    Returns:
-        JSON list of all trips with associated activities (200),
-        or an error message on failure (500).
+    Get all trips
+    ---
+    tags:
+      - Trips
+    responses:
+      200:
+        description: A list of trips
+      500:
+        description: Server error
     """
     try:
         trips = db_manager.get_trips()
@@ -126,14 +179,22 @@ def get_trips():
 @app.route("/trips/<int:trip_id>", methods=["GET"])
 def get_trip(trip_id):
     """
-    Retrieves a single trip by its ID.
-
-    Args:
-        trip_id (int): ID of the trip to retrieve.
-
-    Returns:
-        JSON representation of the trip (200),
-        or error message if not found (404) or server error (500).
+    Get a single trip by ID
+    ---
+    tags:
+      - Trips
+    parameters:
+      - name: trip_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Trip data
+      404:
+        description: Trip not found
+      500:
+        description: Server error
     """
     try:
         trip = db_manager.get_trip_by_id(trip_id)
@@ -148,17 +209,30 @@ def get_trip(trip_id):
 @app.route('/trips/<int:trip_id>', methods=['PUT'])
 def update_trip(trip_id):
     """
-    Updates an existing trip by its ID.
-
-    Args:
-        trip_id (int): ID of the trip to update.
-
-    Expects:
-        JSON with any trip fields to update.
-
-    Returns:
-        JSON of the updated trip (200),
-        or error if not found (404) or failure (500).
+    Update a trip
+    ---
+    tags:
+      - Trips
+    parameters:
+      - name: trip_id
+        in: path
+        type: integer
+        required: true
+      - name: body
+        in: body
+        required: true
+        schema:
+          id: TripUpdate
+          properties:
+            title:
+              type: string
+            description:
+              type: string
+    responses:
+      200:
+        description: Trip updated
+      404:
+        description: Trip not found
     """
     try:
         data = request.get_json()
@@ -173,15 +247,22 @@ def update_trip(trip_id):
 
 @app.route('/trips/<int:trip_id>', methods=['DELETE'])
 def delete_trip(trip_id):
+
     """
     Deletes a trip by its ID.
-
-    Args:
-        trip_id (int): ID of the trip to delete.
-
-    Returns:
-        Success message (200) if deleted,
-        or error message if not found (404).
+    ---
+    tags:
+      - Trips
+    parameters:
+      - name: trip_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Trip deleted
+      404:
+        description: Trip not found
     """
     success = db_manager.delete_trip(trip_id)
     if success:
@@ -193,14 +274,35 @@ def delete_trip(trip_id):
 @app.route('/users', methods=['POST'])
 def add_user():
     """
-    Registers a new user.
-
-    Expects:
-        JSON with 'username', 'email', and 'password'.
-
-    Returns:
-        JSON with user ID, username, and email (201) on success,
-        or error for missing fields (400) or server failure (500).
+    Create a new user
+    ---
+    tags:
+      - Users
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          id: User
+          required:
+            - username
+            - email
+            - password
+          properties:
+            username:
+              type: string
+              example: johndoe
+            email:
+              type: string
+              example: johndoe@example.com
+            password:
+              type: string
+              example: secret123
+    responses:
+      201:
+        description: User successfully created
+      400:
+        description: Validation error
     """
     try:
         data = request.get_json()
@@ -226,9 +328,12 @@ def add_user():
 def get_users():
     """
     Retrieves all registered users.
-
-    Returns:
-        JSON list of users with ID, username, and email (200).
+    ---
+    tags:
+      - Users
+    responses:
+      200:
+        description: A list of users
     """
     users = db_manager.get_all_users()
     return jsonify([
@@ -240,14 +345,20 @@ def get_users():
 @app.route('/users/<int:user_id>', methods=['GET'])
 def get_user(user_id):
     """
-    Retrieves a user by their ID.
-
-    Args:
-        user_id (int): ID of the user.
-
-    Returns:
-        JSON with user details (200),
-        or error if not found (404).
+    Get a user by ID
+    ---
+    tags:
+      - Users
+    parameters:
+      - name: user_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: User details
+      404:
+        description: User not found
     """
     user = db_manager.get_user_by_id(user_id)
     if user:
@@ -262,17 +373,29 @@ def get_user(user_id):
 @app.route('/users/<int:user_id>', methods=['PUT'])
 def update_user(user_id):
     """
-    Updates user details by ID.
-
-    Args:
-        user_id (int): ID of the user to update.
-
-    Expects:
-        JSON with any of 'username' or 'email'.
-
-    Returns:
-        Updated user info (200),
-        or error if not found (404).
+    Update a user
+    ---
+    tags:
+      - Users
+    parameters:
+      - name: user_id
+        in: path
+        type: integer
+        required: true
+      - in: body
+        name: body
+        schema:
+          id: UserUpdate
+          properties:
+            username:
+              type: string
+            email:
+              type: string
+    responses:
+      200:
+        description: User updated
+      404:
+        description: User not found
     """
     data = request.get_json()
     user = db_manager.update_user(user_id, data)
@@ -288,14 +411,20 @@ def update_user(user_id):
 @app.route('/users/<int:user_id>', methods=['DELETE'])
 def delete_user(user_id):
     """
-    Deletes a user by ID.
-
-    Args:
-        user_id (int): ID of the user to delete.
-
-    Returns:
-        Success message (200),
-        or error if user not found (404).
+    Delete a user
+    ---
+    tags:
+      - Users
+    parameters:
+      - name: user_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: User deleted
+      404:
+        description: User not found
     """
     if db_manager.delete_user(user_id):
         return jsonify({"message": "User deleted"})
@@ -305,11 +434,15 @@ def delete_user(user_id):
 @app.route("/activities", methods=["GET"])
 def get_activities():
     """
-    Retrieves all activities from the database.
-
-    Returns:
-        JSON list of activities (200),
-        or error message on failure (500).
+    Get all activities
+    ---
+    tags:
+      - Activities
+    responses:
+      200:
+        description: A list of activities
+      500:
+        description: Server error
     """
     try:
         activities = db_manager.get_activities()
@@ -320,15 +453,22 @@ def get_activities():
 @app.route('/activities/<int:activity_id>', methods=['GET'])
 def get_activity(activity_id):
     """
-    Retrieves an activity by its ID.
-
-    Args:
-        activity_id (int): ID of the activity to retrieve.
-
-    Returns:
-        JSON of the activity (200),
-        or error if not found (404).
+    Get an activity by ID
+    ---
+    tags:
+      - Activities
+    parameters:
+      - name: activity_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Activity found
+      404:
+        description: Activity not found
     """
+
     activity = db_manager.get_activity_by_id(activity_id)
     if activity:
         return jsonify(activity.to_dict()), 200
@@ -338,15 +478,46 @@ def get_activity(activity_id):
 @app.route('/activities', methods=['POST'])
 def create_activity():
     """
-    Creates a new activity.
-
-    Expects:
-        JSON with fields like 'name', 'location', 'type', 'notes',
-        'cost', 'rating', and 'trip_id'.
-
-    Returns:
-        JSON of the created activity (201),
-        or error on validation or server failure (400).
+    Create a new activity
+    ---
+    tags:
+      - Activities
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          id: Activity
+          required:
+            - name
+            - trip_id
+          properties:
+            name:
+              type: string
+              example: Visit the Colosseum
+            location:
+              type: string
+              example: Rome
+            type:
+              type: string
+              example: Sightseeing
+            notes:
+              type: string
+              example: Book tickets in advance
+            cost:
+              type: number
+              example: 20.00
+            rating:
+              type: number
+              example: 4.5
+            trip_id:
+              type: integer
+              example: 1
+    responses:
+      201:
+        description: Activity created
+      400:
+        description: Invalid input
     """
     try:
         activity_data = request.json
@@ -359,17 +530,31 @@ def create_activity():
 @app.route('/activities/<int:activity_id>', methods=['PUT'])
 def update_activity(activity_id):
     """
-    Updates an activity by ID.
-
-    Args:
-        activity_id (int): ID of the activity to update.
-
-    Expects:
-        JSON with any fields to update.
-
-    Returns:
-        Updated activity (200),
-        or error if not found (404) or bad request (400).
+    Update an activity
+    ---
+    tags:
+      - Activities
+    parameters:
+      - name: activity_id
+        in: path
+        type: integer
+        required: true
+      - in: body
+        name: body
+        schema:
+          id: ActivityUpdate
+          properties:
+            name:
+              type: string
+            notes:
+              type: string
+            cost:
+              type: number
+    responses:
+      200:
+        description: Activity updated
+      404:
+        description: Activity not found
     """
     try:
         updates = request.json
@@ -384,14 +569,20 @@ def update_activity(activity_id):
 @app.route('/activities/<int:activity_id>', methods=['DELETE'])
 def delete_activity(activity_id):
     """
-    Deletes an activity by ID.
-
-    Args:
-        activity_id (int): ID of the activity.
-
-    Returns:
-        Success message (200),
-        or error if not found (404) or server error (500).
+    Delete an activity
+    ---
+    tags:
+      - Activities
+    parameters:
+      - name: activity_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: Activity deleted
+      404:
+        description: Activity not found
     """
     try:
         success = db_manager.delete_activity(activity_id)
