@@ -9,7 +9,7 @@ const Header = () => {
         <header className="fixed top-0 left-0 right-0 bg-white/40 backdrop-blur-md z-[1000] px-6 py-4 flex justify-between items-center border-b border-gray-200 shadow-sm">
             {/* Left: Logo + Button */}
             <div className="flex items-center space-x-4">
-                <img src="/logo.png" alt="Logo" className="h-30 w-auto" />
+                <img src="/logo.png" alt="Logo" className="h-20 w-auto" />
                 <Link to= "/search" className="hidden md:inline bg-gray-600 text-white px-4 py-2 rounded hover:bg-red-700 transition">
                     Explore
                 </Link>
