@@ -1,15 +1,17 @@
+
+import { BrowserRouter } from "react-router-dom"
 import React from "react";
-import LandingPage from "./pages/LandingPage";
-import Header from "./components/Header";
+import Router from "./routes/router";
+import Header from "./components/Header"
 
 
 
 function App() {
   return (
-    <>
-    <Header />
-    <LandingPage />
-    </>
+    <BrowserRouter>
+     <Header />
+      <Router />
+    </BrowserRouter>
   
   );
 }
