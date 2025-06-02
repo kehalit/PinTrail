@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify, current_app
 
 users_bp = Blueprint('users', __name__, url_prefix='/users')
 
-@users_bp.route('/', methods=['POST'])
+@users_bp.route('/', methods=['POST', 'OPTIONS'])
 def add_user():
     """
     Create a new user
@@ -35,6 +35,9 @@ def add_user():
       400:
         description: Validation error
     """
+    if request.method == 'OPTIONS':
+        # This responds to the CORS preflight request
+        return jsonify({}), 200
     try:
         data = request.get_json()
         username = data.get('username')
@@ -43,7 +46,7 @@ def add_user():
 
         if not username or not email or not password:
             return jsonify({'error': 'Missing required fields'}), 400
-        db = current_app.config("db_manager")
+        db = current_app.config["db_manager"]
         new_user = db.add_user(username, email, password)
 
         return jsonify({
@@ -164,3 +167,57 @@ def delete_user(user_id):
     if db.delete_user(user_id):
         return jsonify({"message": "User deleted"})
     return jsonify({"error": "User not found"}), 404
+
+
+@users_bp.route('/login', methods=['POST'])
+def login_user():
+    """
+    Log in a user
+    ---
+    tags:
+      - Users
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          id: Login
+          required:
+            - email
+            - password
+          properties:
+            email:
+              type: string
+              example: johndoe@example.com
+            password:
+              type: string
+              example: secret123
+    responses:
+      200:
+        description: Login successful
+      401:
+        description: Invalid credentials
+    """
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+
+        if not email or not password:
+            return jsonify({'error': 'Missing email or password'}), 400
+
+        db = current_app.config["db_manager"]
+        user = db.get_user_by_email(email)
+
+        if not user or not db.verify_password(user, password):
+            return jsonify({'error': 'Invalid email or password'}), 401
+
+        return jsonify({
+            "id": user.id,
+            "username": user.username,
+            "email": user.email
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+

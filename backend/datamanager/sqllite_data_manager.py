@@ -3,7 +3,7 @@ from .data_manager_interface import DataManagerInterface
 from .data_models  import db, User, Trip, Activity, Photo
 from pathlib import Path
 from datetime import datetime
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Database configuration
 basedir = Path(__file__).resolve().parent.parent
@@ -129,6 +129,13 @@ class SQLiteDataManager(DataManagerInterface):
         db.session.delete(user)
         db.session.commit()
         return True
+
+    def get_user_by_email(self, email):
+        return User.query.filter_by(email=email).first()
+
+    def verify_password(self, user, input_password):
+        return check_password_hash(user.password_hash, input_password)
+
 
     def add_activity(self, data):
         new_activity = Activity(
