@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 
 const LoginPage = () => {
+  const { login } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -20,22 +22,19 @@ const LoginPage = () => {
         body: JSON.stringify({ email, password }),
       });
 
+      const data = await res.json();
+
       if (!res.ok) {
-        const errorData = await res.json();
         setErrorMsg(errorData.error || 'Login failed. Please check your credentials.');
         return;
       }
 
-      const userData = await res.json();
-
-      // Save token or user info if needed
-      localStorage.setItem('user', JSON.stringify(userData));
-
-      // Redirect after login
+      login(data); // ✅ update global context
       navigate('/dashboard');
+    
     } catch (err) {
       console.error('Login error:', err);
-      setErrorMsg('Unable to connect to server. Is the backend running?');
+      setErrorMsg('An error occurred. Please try again');
     }
   };
 
