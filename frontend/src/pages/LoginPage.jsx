@@ -1,13 +1,20 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext , useEffect} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
 const LoginPage = () => {
-  const { login } = useContext(AuthContext);
+  const { login, user } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user]);
+
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -25,7 +32,7 @@ const LoginPage = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        setErrorMsg(errorData.error || 'Login failed. Please check your credentials.');
+        setErrorMsg(data.error || 'Login failed. Please check your credentials.');
         return;
       }
 
