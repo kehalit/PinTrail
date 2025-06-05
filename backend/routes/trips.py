@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
 from backend.utils.validates import validate_fields
+from datetime import datetime
 
 trips_bp = Blueprint('trips', __name__, url_prefix='/trips')
 
@@ -176,42 +177,118 @@ def get_trip(trip_id):
         return jsonify({"error": str(e)}), 500
 
 
-@trips_bp.route('/<int:trip_id>', methods=['PUT'])
-def update_trip(trip_id):
+@trips_bp.route('/user/<int:user_id>', methods=['GET'])
+def get_trips_by_user(user_id):
     """
-    Update a trip
+    Get trips for a specific user
     ---
     tags:
       - Trips
     parameters:
-      - name: trip_id
+      - name: user_id
         in: path
         type: integer
         required: true
-      - name: body
-        in: body
-        required: true
-        schema:
-          id: TripUpdate
-          properties:
-            title:
-              type: string
-            description:
-              type: string
     responses:
       200:
-        description: Trip updated
+        description: A list of trips for the user
       404:
-        description: Trip not found
+        description: No trips found
     """
+    try:
+        db = current_app.config["db_manager"]
+        trips = db.get_trips_by_user_id(user_id)
+        return jsonify([
+            {
+                "id": trip.id,
+                "title": trip.title,
+                "user_id": trip.user_id,
+                "country": trip.country,
+                "city": trip.city,
+                "start_date": trip.start_date.isoformat(),
+                "end_date": trip.end_date.isoformat(),
+                "description": trip.description,
+                "notes": trip.notes,
+                "is_public": trip.is_public,
+                "activities": [
+                    {
+                        "id": a.id,
+                        "name": a.name,
+                        "location": a.location,
+                        "type": a.type,
+                        "notes": a.notes,
+                        "cost": a.cost,
+                        "rating": a.rating,
+                        "trip_id": a.trip_id
+                    } for a in trip.activities
+                ]
+            } for trip in trips
+        ]), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@trips_bp.route('/<int:trip_id>', methods=['PUT'])
+def update_trip(trip_id):
+    """
+Update a trip
+---
+tags:
+  - Trips
+parameters:
+  - name: trip_id
+    in: path
+    type: integer
+    required: true
+  - name: body
+    in: body
+    required: true
+    schema:
+      id: TripUpdate
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        start_date:
+          type: string
+        end_date:
+          type: string
+        notes:
+          type: string
+responses:
+  200:
+    description: Trip updated
+  404:
+    description: Trip not found
+"""
+
     try:
         data = request.get_json()
         db = current_app.config["db_manager"]
-        updated_trip = db.update_trip(trip_id, data)
-        if updated_trip:
-            return jsonify(updated_trip.to_dict()), 200
-        else:
+        trip = db.get_trip_by_id(trip_id)
+
+        if not trip:
             return jsonify({"error": "Trip not found"}), 404
+
+        # Only update known fields
+        allowed_fields = ["title", "description", "city", "country", "start_date", "end_date", "notes"]
+        for field in allowed_fields:
+            if field in data:
+                value = data[field]
+
+                if field in ["start_date", "end_date"] and isinstance(value, str):
+                    value = datetime.strptime(value, "%Y-%m-%d").date()
+
+                setattr(trip, field, value)
+
+        db.save_changes()  # This method should commit changes to the DB
+        return jsonify(trip.to_dict()), 200
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 

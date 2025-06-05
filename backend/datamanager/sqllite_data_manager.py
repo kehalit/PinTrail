@@ -179,3 +179,9 @@ class SQLiteDataManager(DataManagerInterface):
         db.session.delete(activity)
         db.session.commit()
         return True
+
+    def get_trips_by_user_id(self, user_id):
+        return db.session.query(Trip).filter_by(user_id=user_id).all()
+
+    def save_changes(self):
+        db.session.commit()
