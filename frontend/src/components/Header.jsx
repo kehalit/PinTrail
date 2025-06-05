@@ -14,7 +14,7 @@ const Header = () => {
   
     const handleLogout = () => {
       logout();
-      navigate("/login");
+      navigate("/", { replace: true });
     };
 
     // inorder to close the dropdown on outside click
