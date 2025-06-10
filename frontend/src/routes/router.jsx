@@ -1,5 +1,7 @@
-// src/routes/router.jsx
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
+
 import LandingPage from "../pages/LandingPage";
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
@@ -8,22 +10,27 @@ import NotFound from "../pages/NotFound";
 import PrivateRoute from "../components/PrivateRoute";
 
 const Router = () => {
+  const { user } = useContext(AuthContext);
+
   return (
     <Routes>
-
       <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route
-        path="/dashboard"
-        element={
-          <PrivateRoute>
-            <Dashboard />
-          </PrivateRoute>
-        }
-      />
-      <Route path="*" element={<NotFound />} />
 
+      {!user && <Route path="/login" element={<LoginPage />} />}
+      {!user && <Route path="/register" element={<RegisterPage />} />}
+
+      {user && (
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
+      )}
+
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };

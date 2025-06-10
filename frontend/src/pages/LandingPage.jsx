@@ -43,14 +43,15 @@ export default function LandingPage() {
           center={[20, 0]}
           zoom={2}
           scrollWheelZoom={true}
-          className="h-full w-full"
+          className="h-full w-full z-0"
           zoomControl={false}
         >
           <ZoomControl position="topright" />
 
           <TileLayer
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+            attribution='&copy; <a href="https://carto.com/" >CARTO</a>'
+            noWrap= {true}
           />
 
           {continentMarkers.map(continent => (
@@ -64,10 +65,10 @@ export default function LandingPage() {
             </Marker>
           ))}
 
-          <FitBounds markers={continentMarkers} />
+  
         </MapContainer>
 
-        <div className="absolute bottom-5 left-5 bg-white bg-opacity-90 rounded p-3 shadow-lg max-w-xs">
+        <div className="absolute bottom-5 left-5 bg-white bg-opacity-90 rounded p-3 shadow-lg max-w-xs z-10">
           <h3 className="font-semibold mb-2">Continents</h3>
           <ul className="list-disc list-inside text-sm">
             {continentMarkers.map(continent => (
