@@ -40,7 +40,9 @@ class SQLiteDataManager(DataManagerInterface):
                 end_date=datetime.strptime(data.get("end_date"), "%Y-%m-%d").date(),
                 description=data.get("description"),
                 notes=data.get("notes"),
-                is_public=data.get("is_public", False)
+                is_public=data.get("is_public", False),
+                lat=data.get("lat"),
+                lng=data.get("lng"),
             )
 
             db.session.add(new_trip)
@@ -71,7 +73,7 @@ class SQLiteDataManager(DataManagerInterface):
         if not trip:
             return None
 
-        for field in ['title', 'country', 'city', 'start_date', 'end_date', 'description', 'notes', 'is_public']:
+        for field in ['title', 'country', 'city', 'start_date', 'end_date', 'description', 'notes', 'is_public', 'lat', 'lng']:
             if field in data:
                 setattr(trip, field, data[field])
 

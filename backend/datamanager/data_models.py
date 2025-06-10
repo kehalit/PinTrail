@@ -32,6 +32,8 @@ class Trip(db.Model):
     description = db.Column(db.Text)
     notes = db.Column(db.Text)
     is_public = db.Column(db.Boolean, default=True)
+    lat = db.Column(db.Float, nullable=True)
+    lng = db.Column(db.Float, nullable=True)
 
     activities = db.relationship("Activity", backref="trip", cascade="all, delete-orphan")
     photos = db.relationship("Photo", backref="trip", cascade="all, delete-orphan")
