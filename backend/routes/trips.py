@@ -64,11 +64,24 @@ def add_new_trip():
             "start_date", "end_date", "description",
             "notes", "is_public"
         ]
+
         error = validate_fields(data, required_fields)
         if error:
             return jsonify(error), 400
 
+        # Optional: validate lat/lng format if present
+        lat = data.get("lat")
+        lng = data.get("lng")
+        if lat is not None and lng is not None:
+            try:
+                lat = float(lat)
+                lng = float(lng)
+            except ValueError:
+                return jsonify({"error": "Invalid lat or lng"}), 400
+
         db = current_app.config["db_manager"]
+
+        # Pass lat/lng into add_trip
         new_trip = db.add_trip(data)
 
         return jsonify({
@@ -82,6 +95,8 @@ def add_new_trip():
             "description": new_trip.description,
             "notes": new_trip.notes,
             "is_public": new_trip.is_public,
+            "lat": new_trip.lat,
+            "lng": new_trip.lng,
             "activities": [
                 {
                     "id": a.id,
@@ -128,6 +143,8 @@ def get_trips():
             "description": trip.description,
             "notes": trip.notes,
             "is_public": trip.is_public,
+             "lat": trip.lat,
+             "lng": trip.lng,
             "activities": [
                 {
                     "id": a.id,
@@ -210,6 +227,8 @@ def get_trips_by_user(user_id):
                 "description": trip.description,
                 "notes": trip.notes,
                 "is_public": trip.is_public,
+                "lat": trip.lat,
+                "lng": trip.lng,
                 "activities": [
                     {
                         "id": a.id,
@@ -276,7 +295,7 @@ responses:
             return jsonify({"error": "Trip not found"}), 404
 
         # Only update known fields
-        allowed_fields = ["title", "description", "city", "country", "start_date", "end_date", "notes"]
+        allowed_fields = ["title", "description", "city", "country", "start_date", "end_date", "notes", "lat", "lng"]
         for field in allowed_fields:
             if field in data:
                 value = data[field]
