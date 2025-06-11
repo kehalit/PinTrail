@@ -4,27 +4,27 @@ import Header from "../components/Header";
 import TripForm from "../components/TripForm";
 
 const Dashboard = () => {
+  const [popupOpen, setPopupOpen] = useState(false);
   const [tripFormOpen, setTripFormOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
+  const [refreshTrips, setRefreshTrips] = useState(false);
 
-
-  //console.log("tripFormOpen:", tripFormOpen);
-  //console.log("selectedLocation:", selectedLocation);
   return (
     <div>
-      <Header />
-      <TripsMap
-        setTripForm={setTripFormOpen}
-        setSelectedLocation={setSelectedLocation}
-        selectedLocation={selectedLocation}
+      <Header popupOpen={popupOpen} />
+      <TripsMap 
+        setTripForm={setTripFormOpen} 
+        setSelectedLocation={setSelectedLocation} 
+        refreshTrips={refreshTrips} 
       />
 
-      {tripFormOpen && selectedLocation && (
-        <TripForm
-          location={selectedLocation}
-          closeForm={() => setTripFormOpen(false)}
+      {tripFormOpen && selectedLocation ? (
+        <TripForm 
+          location={selectedLocation} 
+          closeForm={() => setTripFormOpen(false)} 
+          setRefreshTrips={setRefreshTrips} 
         />
-      )}
+      ) : null}
     </div>
   );
 };

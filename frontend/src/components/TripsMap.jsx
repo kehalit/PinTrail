@@ -2,9 +2,10 @@ import React, { useContext, useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
 import { AuthContext } from "../context/AuthContext";
 
-const TripsMap = ({ setTripForm, setSelectedLocation, selectedLocation }) => {
+const TripsMap = ({ setTripForm, setSelectedLocation, refreshTrips }) => {
   const [trips, setTrips] = useState([]);
   const { user } = useContext(AuthContext);
+  const [localSelectedLocation, setLocalSelectedLocation] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -13,14 +14,17 @@ const TripsMap = ({ setTripForm, setSelectedLocation, selectedLocation }) => {
       .then((res) => res.json())
       .then((data) => setTrips(data))
       .catch((error) => console.error("Error fetching trips:", error));
-  }, [user]);
+  }, [user, refreshTrips]); // Added user as a dependency for better practice
 
+  // Capture Clicks on the Map
   const MapClickHandler = () => {
     useMapEvents({
       click(e) {
         //console.log("Map clicked at:", e.latlng);
-        setSelectedLocation({ lat: e.latlng.lat, lng: e.latlng.lng });
-        // ✅ Do not open the form here
+        const newLocation = { lat: e.latlng.lat, lng: e.latlng.lng };
+        setLocalSelectedLocation(newLocation);
+        setSelectedLocation(newLocation); // Pass to Dashboard
+        setTripForm(true); // Show form
       },
     });
     return null;
@@ -46,19 +50,22 @@ const TripsMap = ({ setTripForm, setSelectedLocation, selectedLocation }) => {
         ) : null
       )}
 
-      {selectedLocation && (
-        <Marker position={[selectedLocation.lat, selectedLocation.lng]}>
+      {localSelectedLocation && (
+        <Marker position={[localSelectedLocation.lat, localSelectedLocation.lng]}>
           <Popup>
             <p>Click <strong>Add Trip</strong> to save this location!</p>
             <button
               onClick={() => {
                 console.log("Add Trip clicked");
-                setTripForm(true); // ✅ This now opens the form
+                // Ensure location is passed again
+                setSelectedLocation(localSelectedLocation); // THIS IS IMPORTANT
+                setTripForm(true); // Show form
               }}
               className="mt-2 px-4 py-2 bg-green-500 text-white rounded"
             >
               Add Trip
             </button>
+
           </Popup>
         </Marker>
       )}
