@@ -12,8 +12,9 @@ function App() {
   return (
     <BrowserRouter>
      <Header />
+     <Toaster position="top-right" reverseOrder={false} />
       <Router />
-      <Toaster position="top-right" reverseOrder={false} />
+      
     </BrowserRouter>
   
   );
