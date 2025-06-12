@@ -8,6 +8,7 @@ import RegisterPage from "../pages/RegisterPage";
 import Dashboard from "../pages/Dashboard";
 import NotFound from "../pages/NotFound";
 import PrivateRoute from "../components/PrivateRoute";
+import SearchPage from "../pages/SearchPage";
 
 const Router = () => {
   const { user } = useContext(AuthContext);
@@ -15,6 +16,7 @@ const Router = () => {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/search" element={<SearchPage />} />
 
       {!user && <Route path="/login" element={<LoginPage />} />}
       {!user && <Route path="/register" element={<RegisterPage />} />}
