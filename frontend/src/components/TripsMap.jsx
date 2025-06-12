@@ -1,14 +1,19 @@
-import React, { useContext, useEffect, useState, useRef } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
 import { AuthContext } from "../context/AuthContext";
 import { Toaster, toast } from "react-hot-toast";
 
-const TripsMap = ({ setTripForm, setSelectedLocation, refreshTrips, setRefreshTrips, setEditingTrip }) => {
+const TripsMap = ({
+  setTripForm,
+  setSelectedLocation,
+  refreshTrips,
+  setRefreshTrips,
+  setEditingTrip,
+  searchQuery, // RECEIVE SEARCH QUERY
+}) => {
   const [trips, setTrips] = useState([]);
   const { user } = useContext(AuthContext);
   const [localSelectedLocation, setLocalSelectedLocation] = useState(null);
-  const [deletingId, setDeletingId] = useState(null);
-  const isDeleting = useRef(false); // Strict lock
 
   useEffect(() => {
     if (!user) return;
@@ -25,52 +30,43 @@ const TripsMap = ({ setTripForm, setSelectedLocation, refreshTrips, setRefreshTr
         const newLocation = { lat: e.latlng.lat, lng: e.latlng.lng };
         setLocalSelectedLocation(newLocation);
         setSelectedLocation(newLocation);
-        setEditingTrip(null); // Clear editing when adding new trip
         setTripForm(true);
       },
     });
     return null;
   };
 
-  const handleDelete = async (e, tripId) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    if (isDeleting.current) return; // Lock to prevent double clicks
-    isDeleting.current = true;
-    setDeletingId(tripId);
-
+  const handleDelete = async (tripId) => {
     try {
-      const response = await fetch(`http://127.0.0.1:5000/trips/${tripId}`, {
+      const response = await fetch(`http://127.0.0.1:5000/trips/delete_trip/${tripId}`, {
         method: "DELETE",
       });
 
       if (response.ok) {
         toast.success("Trip deleted successfully");
-        // Delay refresh slightly to let popup fully close
-        setTimeout(() => {
-          setRefreshTrips(prev => !prev);
-        }, 300);
+        setRefreshTrips((prev) => !prev);
       } else {
         toast.error("Error deleting trip");
       }
     } catch (error) {
       console.error("Error deleting trip:", error);
       toast.error("An unexpected error occurred.");
-    } finally {
-      setDeletingId(null);
-      isDeleting.current = false;
     }
   };
 
-  const handleEdit = (e, trip) => {
-    e.preventDefault();
-    e.stopPropagation();
-
+  const handleEdit = (trip) => {
     setSelectedLocation({ lat: trip.lat, lng: trip.lng });
     setEditingTrip(trip);
     setTripForm(true);
   };
+
+  //  FILTER TRIPS BASED ON SEARCH
+  
+  const filteredTrips = trips.filter((trip) =>
+    trip.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    trip.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    trip.country.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div>
@@ -79,7 +75,8 @@ const TripsMap = ({ setTripForm, setSelectedLocation, refreshTrips, setRefreshTr
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" noWrap={true} />
         <MapClickHandler />
 
-        {trips.map((trip) =>
+        {/* USE FILTERED TRIPS */}
+        {filteredTrips.map((trip) =>
           trip.lat && trip.lng ? (
             <Marker key={trip.id} position={[trip.lat, trip.lng]}>
               <Popup>
@@ -91,17 +88,19 @@ const TripsMap = ({ setTripForm, setSelectedLocation, refreshTrips, setRefreshTr
 
                   <div className="flex justify-center space-x-2 mt-2">
                     <button
-                      onClick={(e) => handleEdit(e, trip)}
+                      onClick={() => handleEdit(trip)}
                       className="px-3 py-1 bg-yellow-500 text-white rounded"
                     >
                       Edit
                     </button>
                     <button
-                      onClick={(e) => handleDelete(e, trip.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(trip.id);
+                      }}
                       className="mt-2 px-4 py-2 bg-red-500 text-white rounded"
-                      disabled={deletingId === trip.id}
                     >
-                      {deletingId === trip.id ? "Deleting..." : "Delete"}
+                      Delete
                     </button>
                   </div>
                 </div>
@@ -117,7 +116,6 @@ const TripsMap = ({ setTripForm, setSelectedLocation, refreshTrips, setRefreshTr
               <button
                 onClick={() => {
                   setSelectedLocation(localSelectedLocation);
-                  setEditingTrip(null);
                   setTripForm(true);
                 }}
                 className="mt-2 px-4 py-2 bg-green-500 text-white rounded"

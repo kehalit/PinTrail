@@ -39,21 +39,10 @@ export default function LandingPage() {
       </header>
 
       <div className="flex-grow relative">
-        <MapContainer
-          center={[20, 0]}
-          zoom={2}
-          scrollWheelZoom={true}
-          className="h-full w-full z-0"
-          zoomControl={false}
-        >
-          <ZoomControl position="topright" />
-
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-            attribution='&copy; <a href="https://carto.com/" >CARTO</a>'
-            noWrap= {true}
-          />
-
+    
+           <MapContainer center={[40, -1]} zoom={3} style={{ height: "100vh", width: "100vw" }}>
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" noWrap={true} />
+                 
           {continentMarkers.map(continent => (
             <Marker key={continent.name} position={continent.position}>
               <Popup autoOpen={true} closeButton={false} autoClose={false}>
