@@ -1,40 +1,49 @@
 import React, { useState } from "react";
 import TripsMap from "../components/TripsMap";
-import Header from "../components/Header";
 import TripForm from "../components/TripForm";
+import LocationSearch from "../components/LocationSearch";
 
 const Dashboard = () => {
-  const [popupOpen, setPopupOpen] = useState(false);
+
   const [tripFormOpen, setTripFormOpen] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState(null);
   const [refreshTrips, setRefreshTrips] = useState(false);
   const [editingTrip, setEditingTrip] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(""); // SEARCH QUERY STATE
+  const [mapCenter, setMapCenter] = useState([40, -1]);
+  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [locationName, setLocationName] = useState("");
+  const [mapZoom, setMapZoom] = useState(12);
+
+
 
   return (
-    <div>
-      <Header popupOpen={popupOpen} />
+    <div className="pt-30">
 
-      {/* Search Input */}
-      <div className="flex justify-center mt-4">
-        <input
-          type="text"
-          placeholder="Search by title, city, or country"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="border p-2 w-1/2 rounded"
+      {/* Location Search Input */}
+      <div className="relative z-[1000] max-w-md mx-auto mt-4">
+        <LocationSearch
+          setMapCenter={setMapCenter}
+          setSearchedLocation={setSelectedLocation}
+          setLocationName={setLocationName}
+
         />
       </div>
 
-      <TripsMap
+      {/* Map */}
+      <div className="relative z-0">
+       <TripsMap
         setTripForm={setTripFormOpen}
-        setSelectedLocation={setSelectedLocation}
+        setSelectedLocation={setSelectedLocation}  
         refreshTrips={refreshTrips}
         setRefreshTrips={setRefreshTrips}
         setEditingTrip={setEditingTrip}
-        searchQuery={searchQuery} // PASSING SEARCH QUERY
-      />
+        mapCenter={mapCenter}
+        selectedLocation={selectedLocation}
+        locationName={locationName}
 
+      />
+      </div>
+
+      {/* Trip Form */}
       {tripFormOpen && selectedLocation ? (
         <TripForm
           location={selectedLocation}

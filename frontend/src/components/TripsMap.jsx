@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from "react-leaflet";
 import { AuthContext } from "../context/AuthContext";
-import { Toaster, toast } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 
 const TripsMap = ({
   setTripForm,
@@ -9,11 +9,15 @@ const TripsMap = ({
   refreshTrips,
   setRefreshTrips,
   setEditingTrip,
-  searchQuery, // RECEIVE SEARCH QUERY
+  mapCenter,
+  selectedLocation,
+  locationName,
+  mapZoom
+ 
 }) => {
   const [trips, setTrips] = useState([]);
   const { user } = useContext(AuthContext);
-  const [localSelectedLocation, setLocalSelectedLocation] = useState(null);
+  const [localClickedLocation, setLocalClickedLocation] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -28,13 +32,22 @@ const TripsMap = ({
     useMapEvents({
       click(e) {
         const newLocation = { lat: e.latlng.lat, lng: e.latlng.lng };
-        setLocalSelectedLocation(newLocation);
-        setSelectedLocation(newLocation);
+        setLocalClickedLocation(newLocation);
+        selectedLocation(newLocation);
         setTripForm(true);
       },
     });
     return null;
   };
+
+  const ChangeMapView = ({ center, zoom }) => {
+  const map = useMap();
+  useEffect(() => {
+    map.setView(center, zoom);
+  }, [center, zoom, map]);
+  
+  return null;
+};
 
   const handleDelete = async (tripId) => {
     try {
@@ -60,23 +73,15 @@ const TripsMap = ({
     setTripForm(true);
   };
 
-  //  FILTER TRIPS BASED ON SEARCH
-  
-  const filteredTrips = trips.filter((trip) =>
-    trip.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    trip.city.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    trip.country.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   return (
     <div>
-      
       <MapContainer center={[40, -1]} zoom={3} style={{ height: "100vh", width: "100vw" }}>
+        <ChangeMapView center={mapCenter} zoom={mapZoom} />
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" noWrap={true} />
         <MapClickHandler />
 
-        {/* USE FILTERED TRIPS */}
-        {filteredTrips.map((trip) =>
+        {/* Existing Trip Markers */}
+        {trips.map((trip) =>
           trip.lat && trip.lng ? (
             <Marker key={trip.id} position={[trip.lat, trip.lng]}>
               <Popup>
@@ -109,13 +114,13 @@ const TripsMap = ({
           ) : null
         )}
 
-        {localSelectedLocation && (
-          <Marker position={[localSelectedLocation.lat, localSelectedLocation.lng]}>
+        {/* Marker for clicked location */}
+        {localClickedLocation && (
+          <Marker position={[localClickedLocation.lat, localClickedLocation.lng]}>
             <Popup>
               <p>Click <strong>Add Trip</strong> to save this location!</p>
               <button
                 onClick={() => {
-                  setSelectedLocation(localSelectedLocation);
                   setTripForm(true);
                 }}
                 className="mt-2 px-4 py-2 bg-green-500 text-white rounded"
@@ -123,6 +128,12 @@ const TripsMap = ({
                 Add Trip
               </button>
             </Popup>
+          </Marker>
+        )}
+
+        {selectedLocation && (
+          <Marker position={selectedLocation}>
+            <Popup>{locationName || "Selected Location"}</Popup>
           </Marker>
         )}
       </MapContainer>
