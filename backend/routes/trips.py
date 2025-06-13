@@ -295,7 +295,7 @@ responses:
             return jsonify({"error": "Trip not found"}), 404
 
         # Only update known fields
-        allowed_fields = ["title", "description", "city", "country", "start_date", "end_date", "notes", "lat", "lng"]
+        allowed_fields = ["title", "description", "city", "country", "start_date", "end_date", "notes", "lat", "lng", "is_public"]
         for field in allowed_fields:
             if field in data:
                 value = data[field]
