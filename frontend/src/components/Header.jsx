@@ -41,7 +41,7 @@ const Header = ({ popupOpen }) => {
 
     return (
         <header
-            className={`fixed top-0 left-0 right-0 bg-white/40 backdrop-blur-md z-[1000] px-6 py-4 flex justify-between items-center border-b border-gray-200 shadow-sm transition-transform duration-500 ${
+            className={`fixed top-0 left-0 right-0 bg-white shadow z-50 backdrop-blur-md z-[1000] px-6 py-4 flex justify-between items-center border-b border-gray-200 shadow-sm transition-transform duration-500 ${
                 scrolling || popupOpen ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
             }`}
         >
