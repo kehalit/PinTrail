@@ -5,19 +5,21 @@ import { toast } from "react-hot-toast";
 
 const TripsMap = ({
   setTripForm,
-  setSelectedLocation,
   refreshTrips,
   setRefreshTrips,
   setEditingTrip,
   mapCenter,
   selectedLocation,
+  setSelectedLocation,
   locationName,
-  mapZoom
- 
+  mapZoom,
+  showSearchPin,
+  setSearchQuery,
+  localClickedLocation,
+  setLocalClickedLocation,
 }) => {
   const [trips, setTrips] = useState([]);
   const { user } = useContext(AuthContext);
-  const [localClickedLocation, setLocalClickedLocation] = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -31,30 +33,27 @@ const TripsMap = ({
   const MapClickHandler = () => {
     useMapEvents({
       click(e) {
-        const newLocation = { lat: e.latlng.lat, lng: e.latlng.lng };
+        const newLocation = { lat: e.latlng.lat, lng: e.latlng.lng, name: "Custom Location" };
         setLocalClickedLocation(newLocation);
-        selectedLocation(newLocation);
+        setSelectedLocation(newLocation);
         setTripForm(true);
+
       },
     });
     return null;
   };
 
   const ChangeMapView = ({ center, zoom }) => {
-  const map = useMap();
-  useEffect(() => {
-    map.setView(center, zoom);
-  }, [center, zoom, map]);
-  
-  return null;
-};
+    const map = useMap();
+    useEffect(() => {
+      map.setView(center, zoom);
+    }, [center, zoom, map]);
+    return null;
+  };
 
   const handleDelete = async (tripId) => {
     try {
-      const response = await fetch(`http://127.0.0.1:5000/trips/delete_trip/${tripId}`, {
-        method: "DELETE",
-      });
-
+      const response = await fetch(`http://127.0.0.1:5000/trips/${tripId}`, { method: "DELETE" });
       if (response.ok) {
         toast.success("Trip deleted successfully");
         setRefreshTrips((prev) => !prev);
@@ -68,7 +67,7 @@ const TripsMap = ({
   };
 
   const handleEdit = (trip) => {
-    setSelectedLocation({ lat: trip.lat, lng: trip.lng });
+    setSelectedLocation({ lat: trip.lat, lng: trip.lng, name: trip.title });
     setEditingTrip(trip);
     setTripForm(true);
   };
@@ -114,11 +113,11 @@ const TripsMap = ({
           ) : null
         )}
 
-        {/* Marker for clicked location */}
-        {localClickedLocation && (
-          <Marker position={[localClickedLocation.lat, localClickedLocation.lng]}>
+        {/* Selected Location Marker for Adding Trip */}
+        {selectedLocation && (
+          <Marker position={[selectedLocation.lat, selectedLocation.lng]}>
             <Popup>
-              <p>Click <strong>Add Trip</strong> to save this location!</p>
+              <p>{locationName || selectedLocation.name || "Selected Location"}</p>
               <button
                 onClick={() => {
                   setTripForm(true);
@@ -128,12 +127,6 @@ const TripsMap = ({
                 Add Trip
               </button>
             </Popup>
-          </Marker>
-        )}
-
-        {selectedLocation && (
-          <Marker position={selectedLocation}>
-            <Popup>{locationName || "Selected Location"}</Popup>
           </Marker>
         )}
       </MapContainer>
