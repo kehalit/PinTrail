@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { debounce } from "lodash";
 
-const LocationSearch = ({ setMapCenter, setSearchedLocation, setLocationName }) => {
-  const [searchQuery, setSearchQuery] = useState("");
+const LocationSearch = ({ setMapCenter, setSearchedLocation, setLocationName, setMapZoom, searchQuery, setSearchQuery }) => {
+  
   const [suggestions, setSuggestions] = useState([]);
 
   const fetchLocations = async (query) => {
@@ -22,10 +22,9 @@ const LocationSearch = ({ setMapCenter, setSearchedLocation, setLocationName }) 
       return data.map((item) => ({
         id: item.place_id,
         name: item.display_name,
-        position: [parseFloat(item.lat), parseFloat(item.lon)],
+        position: [parseFloat(item.lat), parseFloat(item.lng)],
       }));
     } catch (err) {
-      console.error("Location search error:", err);
       return [];
     }
   };
@@ -46,10 +45,10 @@ const LocationSearch = ({ setMapCenter, setSearchedLocation, setLocationName }) 
 
   const handleSuggestionClick = (suggestion) => {
     setMapCenter(suggestion.position);
-    setSearchedLocation(suggestion.position);
+    setSearchedLocation({ lat: suggestion.position[0], lng: suggestion.position[1] });
     setLocationName(suggestion.name);
-    setSearchQuery(suggestion.name);
-    setSuggestions([]);
+    setMapZoom(15);
+    setSuggestions([]); 
   };
 
   return (
@@ -58,8 +57,10 @@ const LocationSearch = ({ setMapCenter, setSearchedLocation, setLocationName }) 
         type="text"
         className="w-full border rounded p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
         placeholder="Search for a location"
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
+        value={searchQuery} 
+        onChange={(e) => {
+          setSearchQuery(e.target.value);
+        }}
       />
 
       {suggestions.length > 0 && (
