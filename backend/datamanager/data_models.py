@@ -66,6 +66,8 @@ class Activity(db.Model):
     cost = db.Column(db.Float)
     rating = db.Column(db.Integer)
     notes = db.Column(db.Text)
+    lat = db.Column(db.Float, nullable=True)
+    lng = db.Column(db.Float, nullable=True)
 
     def to_dict(self):
         return {
@@ -76,7 +78,9 @@ class Activity(db.Model):
             "location": self.location,
             "cost": self.cost,
             "rating": self.rating,
-            "notes": self.notes
+            "notes": self.notes,
+            "lat": self.lat,
+            "lng": self.lng
         }
 
 class Photo(db.Model):

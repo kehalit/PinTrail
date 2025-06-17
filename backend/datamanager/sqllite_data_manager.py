@@ -147,7 +147,9 @@ class SQLiteDataManager(DataManagerInterface):
             cost=data.get("cost"),
             notes=data.get("notes"),
             rating=data.get("rating"),
-            trip_id=data["trip_id"]
+            trip_id=data["trip_id"],
+            lat=data.get("lat"),
+            lng=data.get("lng")
         )
         db.session.add(new_activity)
         db.session.commit()
@@ -161,6 +163,13 @@ class SQLiteDataManager(DataManagerInterface):
             print(f"Error fetching activities: {e}")
             return []
 
+    def get_activities_by_trip_id(self, trip_id):
+        try:
+            activities = Activity.query.filter_by(trip_id=trip_id).all()
+            return [activity.to_dict() for activity in activities]
+        except Exception as e:
+            print(f"Error fetching activities for trip {trip_id}: {e}")
+            return []
 
     def get_activity_by_id(self, activity_id):
         return Activity.query.get(activity_id)
