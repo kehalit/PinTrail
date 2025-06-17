@@ -49,6 +49,30 @@ def get_activity(activity_id):
         return jsonify(activity.to_dict()), 200
     return jsonify({"error": "Activity not found"}), 404
 
+@activites_bp.route('/trip/<int:trip_id>', methods=['GET'])
+def get_activities_by_trip_id(trip_id):
+    """
+    Get activities by trip ID
+    ---
+    tags:
+      - Activities
+    parameters:
+      - name: trip_id
+        in: path
+        type: integer
+        required: true
+    responses:
+      200:
+        description: A list of activities for the trip
+      500:
+        description: Server error
+    """
+    try:
+        db = current_app.config["db_manager"]
+        activities = db.get_activities_by_trip_id(trip_id)
+        return jsonify(activities), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @activites_bp.route('/', methods=['POST'])
 def create_activity():
