@@ -22,7 +22,7 @@ const LocationSearch = ({ setMapCenter, setSearchedLocation, setLocationName, se
       return data.map((item) => ({
         id: item.place_id,
         name: item.display_name,
-        position: [parseFloat(item.lat), parseFloat(item.lng)],
+        position: [parseFloat(item.lat), parseFloat(item.lon)],
       }));
     } catch (err) {
       return [];
