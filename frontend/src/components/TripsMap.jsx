@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from "react-leaflet";
 import { AuthContext } from "../context/AuthContext";
 import { toast } from "react-hot-toast";
+import { fetchTripsByUserId, deleteTrip } from "../api/trips"; 
 
 const TripsMap = ({
   setTripForm,
@@ -24,10 +25,17 @@ const TripsMap = ({
   useEffect(() => {
     if (!user) return;
 
-    fetch(`http://127.0.0.1:5000/trips/user/${user.id}`)
-      .then((res) => res.json())
-      .then((data) => setTrips(data))
-      .catch((error) => console.error("Error fetching trips:", error));
+    const loadTrips = async () => {
+      try {
+        const data = await fetchTripsByUserId(user.id);
+        setTrips(data);
+      } catch (error) {
+        console.error("Error fetching trips:", error);
+        toast.error("Failed to fetch trips.");
+      }
+    };
+
+    loadTrips();
   }, [user, refreshTrips]);
 
   const MapClickHandler = () => {
@@ -37,7 +45,6 @@ const TripsMap = ({
         setLocalClickedLocation(newLocation);
         setSelectedLocation(newLocation);
         setTripForm(true);
-
       },
     });
     return null;
@@ -53,16 +60,12 @@ const TripsMap = ({
 
   const handleDelete = async (tripId) => {
     try {
-      const response = await fetch(`http://127.0.0.1:5000/trips/${tripId}`, { method: "DELETE" });
-      if (response.ok) {
-        toast.success("Trip deleted successfully");
-        setRefreshTrips((prev) => !prev);
-      } else {
-        toast.error("Error deleting trip");
-      }
+      await deleteTrip(tripId);
+      toast.success("Trip deleted successfully");
+      setRefreshTrips((prev) => !prev);
     } catch (error) {
       console.error("Error deleting trip:", error);
-      toast.error("An unexpected error occurred.");
+      toast.error("Error deleting trip");
     }
   };
 
@@ -79,7 +82,6 @@ const TripsMap = ({
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" noWrap={true} />
         <MapClickHandler />
 
-        {/* Existing Trip Markers */}
         {trips.map((trip) =>
           trip.lat && trip.lng ? (
             <Marker key={trip.id} position={[trip.lat, trip.lng]}>
@@ -113,15 +115,12 @@ const TripsMap = ({
           ) : null
         )}
 
-        {/* Selected Location Marker for Adding Trip */}
         {selectedLocation && (
           <Marker position={[selectedLocation.lat, selectedLocation.lng]}>
             <Popup>
               <p>{locationName || selectedLocation.name || "Selected Location"}</p>
               <button
-                onClick={() => {
-                  setTripForm(true);
-                }}
+                onClick={() => setTripForm(true)}
                 className="mt-2 px-4 py-2 bg-green-500 text-white rounded"
               >
                 Add Trip

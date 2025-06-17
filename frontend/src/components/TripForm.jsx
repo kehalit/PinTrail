@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { toast } from "react-hot-toast";
+import { createTrip, updateTrip } from "../api/trips"; // 👉 Import API functions
 
 const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
   const { user } = useContext(AuthContext);
@@ -19,9 +20,6 @@ const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
     user_id: user?.id,
   });
 
-  const [errors, setErrors] = useState({});
-
-  // Pre-fill form if editing
   useEffect(() => {
     if (editingTrip) {
       setFormData({
@@ -52,28 +50,18 @@ const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
     e.preventDefault();
 
     try {
-      const url = editingTrip
-        ? `http://127.0.0.1:5000/trips/${editingTrip.id}`
-        : "http://127.0.0.1:5000/trips/add_trip";
-
-      const method = editingTrip ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success(editingTrip ? "Trip updated successfully!" : "Trip added successfully!");
-        setRefreshTrips((prev) => !prev);
-        closeForm();
+      if (editingTrip) {
+        // Update existing trip
+        await updateTrip(editingTrip.id, formData);
+        toast.success("Trip updated successfully!");
       } else {
-        console.error("Error saving trip:", data);
-        toast.error(data?.error || "An unexpected error occurred.");
+        // Create new trip
+        await createTrip(formData);
+        toast.success("Trip added successfully!");
       }
+
+      setRefreshTrips((prev) => !prev);
+      closeForm();
     } catch (error) {
       console.error("Error submitting form:", error);
       toast.error("An unexpected error occurred.");
