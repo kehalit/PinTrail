@@ -14,7 +14,7 @@ const LocationSearch = ({ setMapCenter, setSearchedLocation, setLocationName, se
         )}&format=json&limit=5`,
         {
           headers: {
-            "User-Agent": "your-app-name/1.0 (your-email@example.com)",
+            "User-Agent": "pintrail/1.0 (kehalit@example.com)",
           },
         }
       );

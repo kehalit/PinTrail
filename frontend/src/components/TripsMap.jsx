@@ -2,7 +2,8 @@ import React, { useContext, useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from "react-leaflet";
 import { AuthContext } from "../context/AuthContext";
 import { toast } from "react-hot-toast";
-import { fetchTripsByUserId, deleteTrip } from "../api/trips"; 
+import { fetchTripsByUserId, deleteTrip } from "../api/trips";
+import { useNavigate } from "react-router-dom"; 
 
 const TripsMap = ({
   setTripForm,
@@ -14,14 +15,11 @@ const TripsMap = ({
   setSelectedLocation,
   locationName,
   mapZoom,
-  showSearchPin,
-  setSearchQuery,
-  localClickedLocation,
   setLocalClickedLocation,
 }) => {
   const [trips, setTrips] = useState([]);
   const { user } = useContext(AuthContext);
-
+  const navigate = useNavigate(); 
   useEffect(() => {
     if (!user) return;
 
@@ -77,7 +75,7 @@ const TripsMap = ({
 
   return (
     <div>
-      <MapContainer center={[40, -1]} zoom={3} style={{ height: "100vh", width: "100vw" }}>
+      <MapContainer center={[40, -1]} zoom={3} style={{ height: "80vh", width: "100vw" }}>
         <ChangeMapView center={mapCenter} zoom={mapZoom} />
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" noWrap={true} />
         <MapClickHandler />
@@ -87,7 +85,12 @@ const TripsMap = ({
             <Marker key={trip.id} position={[trip.lat, trip.lng]}>
               <Popup>
                 <div className="text-center">
-                  <h3 className="font-bold text-blue-600">{trip.title}</h3>
+                  <h3
+                    className="font-bold text-blue-600 cursor-pointer hover:underline"
+                    onClick={() => navigate(`/trips/${trip.id}`)} 
+                  >
+                    {trip.title}
+                  </h3>
                   <p>{trip.city}, {trip.country}</p>
                   <p>{trip.description}</p>
                   <p><strong>Start:</strong> {trip.start_date} | <strong>End:</strong> {trip.end_date}</p>
@@ -95,8 +98,8 @@ const TripsMap = ({
                   <div className="flex justify-center space-x-2 mt-2">
                     <button
                       onClick={() => handleEdit(trip)}
-                      className="px-3 py-1 bg-yellow-500 text-white rounded"
-                    >
+                      className="px-3 py-1 bg-yellow-500 text-white rounded">
+                    
                       Edit
                     </button>
                     <button
@@ -104,8 +107,8 @@ const TripsMap = ({
                         e.stopPropagation();
                         handleDelete(trip.id);
                       }}
-                      className="mt-2 px-4 py-2 bg-red-500 text-white rounded"
-                    >
+                      className="mt-2 px-4 py-2 bg-red-500 text-white rounded">
+                  
                       Delete
                     </button>
                   </div>
