@@ -13,15 +13,8 @@ const Dashboard = () => {
   const [locationName, setLocationName] = useState("");
   const [mapZoom, setMapZoom] = useState(3);
   const [localClickedLocation, setLocalClickedLocation] = useState(null);
-
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-  }, [searchQuery]);
-  
-  useEffect(() => {
-  }, [selectedLocation]);
-  
 
   return (
     <div className="pt-30">

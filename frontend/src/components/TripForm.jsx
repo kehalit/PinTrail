@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { toast } from "react-hot-toast";
-import { createTrip, updateTrip } from "../api/trips"; // 👉 Import API functions
+import { createTrip, updateTrip } from "../api/trips"; 
 
 const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
   const { user } = useContext(AuthContext);
