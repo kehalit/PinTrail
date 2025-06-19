@@ -4,6 +4,10 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { fetchTripById } from "../api/trips";
 import { getActivitiesByTripId } from "../api/activities";
+import LocationSearch from "../components/LocationSearch";
+import MapController from "../components/MapController";
+import ActivityForm from "../components/ActivityForm";
+
 
 const TripDetailsPage = () => {
   const { tripId } = useParams();
@@ -12,17 +16,59 @@ const TripDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const [mapCenter, setMapCenter] = useState([39.6953, 3.0176]); 
+  const [mapZoom, setMapZoom] = useState(10);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchedLocation, setSearchedLocation] = useState(null);
+  const [locationName, setLocationName] = useState("");
+
+  const [showActivityForm, setShowActivityForm] = useState(false);
+  const [activityLocation, setActivityLocation] = useState(null);
+    
+  const [loadingActivities, setLoadingActivities] = useState(false);
   
+  const refreshActivities = async () => {
+    try {
+      const activitiesData = await getActivitiesByTripId(tripId);
+      setActivities(activitiesData);
+    } catch (error) {
+      console.error("Error refreshing activities:", error);
+    }
+  };
+
+  const fetchActivities = async () => {
+    try {
+      setLoadingActivities(true);
+      const activitiesData = await getActivitiesForTrip(tripId);
+      setActivities(activitiesData);
+    } catch (error) {
+      console.error("Error fetching activities:", error);
+    } finally {
+      setLoadingActivities(false);
+    }
+  };
+  
+
   useEffect(() => {
     async function fetchTripDetails() {
       try {
         setLoading(true);
         const tripData = await fetchTripById(tripId);
-        console.log("Fetched trip data:", tripData);
         const activitiesData = await getActivitiesByTripId(tripId);
-        console.log("Fetched activities:", activitiesData);
+
         setTrip(tripData);
         setActivities(activitiesData);
+
+        // Set initial map center
+        const firstActivityWithCoordinates = activitiesData.find(
+          (act) => act.lat && act.lng
+        );
+
+        if (firstActivityWithCoordinates) {
+          setMapCenter([firstActivityWithCoordinates.lat, firstActivityWithCoordinates.lng]);
+        } else if (tripData.lat && tripData.lng) {
+          setMapCenter([tripData.lat, tripData.lng]);
+        }
       } catch (err) {
         console.error(err);
         setError("Failed to load trip details.");
@@ -39,24 +85,13 @@ const TripDetailsPage = () => {
 
   const { city, country, description } = trip;
 
-  // Fallback to the first activity with coordinates
-  const firstActivityWithCoordinates = activities.find(
-    (act) => act.lat && act.lng
-  );
-
-  // Set map center: use activity, or fallback to a default (trip location)
-  const mapCenter = firstActivityWithCoordinates
-    ? [firstActivityWithCoordinates.lat, firstActivityWithCoordinates.lng]
-    : [trip.lat, trip.lng]; // Default to trip location
-
   return (
-
-    <div className="max-w-6xl mx-auto p-30 flex flex-col md:flex-row gap-6">
-     
+    <div className="max-w-6xl mx-auto p-8 flex flex-col md:flex-row gap-6">
       {/* Left: Trip Details + Activities */}
-      <div className="md:w-1/3  bg-white rounded-lg shadow-md p-10 overflow-y-auto max-h-[80vh]">
+      <div className="md:w-1/3 bg-white rounded-lg shadow-md p-20 overflow-y-auto max-h-[80vh]">
         <h1 className="text-2xl font-bold mb-4">{city}, {country}</h1>
         <p className="mb-4 text-gray-700">{description}</p>
+
         <h2 className="text-xl font-semibold mb-2">Activities</h2>
         {activities.length === 0 ? (
           <p className="text-gray-500">No activities found for this trip.</p>
@@ -74,24 +109,45 @@ const TripDetailsPage = () => {
             ))}
           </ul>
         )}
-        
       </div>
 
       {/* Right: Map */}
-      <div className="md:w-2/3 h-[80vh] rounded-lg overflow-hidden shadow-md">
+      <div className="md:w-2/3 h-[80vh] rounded-lg overflow-hidden shadow-md relative">
+        {/* Location Search on top of map */}
+        <div className="absolute top-4 left-4 right-4 z-[1000]">
+          <LocationSearch
+            setMapCenter={setMapCenter}
+            setSearchedLocation={setSearchedLocation}
+            setLocationName={setLocationName}
+            setMapZoom={setMapZoom}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+          />
+        </div>
+        {searchedLocation && (
+          <div className="absolute top-24 left-1/2 transform -translate-x-1/2 z-50">
+            <button
+              onClick={() => setShowActivityForm(true)}
+              className="bg-green-500 text-white px-4 py-2 rounded shadow"
+            >
+              Add Activity Here
+            </button>
+          </div>
+        )}
+
+
         {activities.length === 0 && (
           <div className="p-4 text-center text-gray-500">No activity locations to display on map.</div>
         )}
-        <MapContainer center={mapCenter} zoom={10} scrollWheelZoom style={{ height: "100%", width: "100%" }}>
+
+        <MapContainer center={mapCenter} zoom={mapZoom} style={{ height: "80vh", width: "100%" }} >
+          <MapController center={mapCenter} zoom={mapZoom} />
+
           <TileLayer
             attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {firstActivityWithCoordinates && (
-            <Marker position={mapCenter}>
-              <Popup>First activity location</Popup>
-            </Marker>
-          )}
+
           {activities.map((act) =>
             act.lat && act.lng ? (
               <Marker key={act.id} position={[act.lat, act.lng]}>
@@ -99,8 +155,40 @@ const TripDetailsPage = () => {
               </Marker>
             ) : null
           )}
+
+          {searchedLocation && (
+            <Marker position={[searchedLocation.lat, searchedLocation.lng]}>
+              <Popup>
+                <div>{locationName || "Selected Location"}</div>
+                <button 
+            
+                  onClick={() => {
+                    setActivityLocation({ lat: searchedLocation.lat, lng: searchedLocation.lng });
+                    setShowActivityForm(true);
+                  }}
+                  className="mt-2 px-4 py-2 bg-green-500 text-white rounded"
+                >
+                  add Activity
+                </button>
+
+              </Popup>
+            </Marker>
+          )}
+
         </MapContainer>
+
       </div>
+      {/* Activity Form Modal */}
+      {showActivityForm && (
+        <ActivityForm
+          location={activityLocation}
+          closeForm={() => setShowActivityForm(false)}
+          tripId={trip.id}
+          refreshActivities={refreshActivities}
+          loading={loading}
+          
+        />
+      )}
     </div>
   );
 };
