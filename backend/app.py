@@ -2,7 +2,7 @@ from flask import Flask, jsonify, render_template, request, redirect, url_for, f
 from flasgger import Swagger
 from flask_cors import CORS
 from datamanager.sqllite_data_manager import SQLiteDataManager
-from routes.activities import activites_bp
+from routes.activities import activities_bp
 from routes.trips import trips_bp
 from routes.users import users_bp
 
@@ -23,7 +23,7 @@ swagger = Swagger(app, template={
 })
 db_manager = SQLiteDataManager(app)
 app.config["db_manager"] = db_manager
-app.register_blueprint(activites_bp, url_prefix='/activities')
+app.register_blueprint(activities_bp)
 app.register_blueprint(trips_bp)
 app.register_blueprint(users_bp)
 

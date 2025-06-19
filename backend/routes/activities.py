@@ -1,11 +1,10 @@
 from flask import Blueprint, request, jsonify, current_app
-from flasgger import Swagger
-from backend.datamanager.sqllite_data_manager import SQLiteDataManager
 
 
+activities_bp = Blueprint('activities', __name__, url_prefix='/activities')
 
-activites_bp = Blueprint('activities', __name__)
-@activites_bp.route("/", methods=["GET"])
+
+@activities_bp.route("/", methods=["GET"])
 def get_activities():
     """
     Get all activities
@@ -25,7 +24,7 @@ def get_activities():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@activites_bp.route('/<int:activity_id>', methods=['GET'])
+@activities_bp.route('/<int:activity_id>', methods=['GET'])
 def get_activity(activity_id):
     """
     Get an activity by ID
@@ -49,7 +48,7 @@ def get_activity(activity_id):
         return jsonify(activity.to_dict()), 200
     return jsonify({"error": "Activity not found"}), 404
 
-@activites_bp.route('/trip/<int:trip_id>', methods=['GET'])
+@activities_bp.route('/trip/<int:trip_id>', methods=['GET'])
 def get_activities_by_trip_id(trip_id):
     """
     Get activities by trip ID
@@ -74,7 +73,7 @@ def get_activities_by_trip_id(trip_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@activites_bp.route('/', methods=['POST'])
+@activities_bp.route('/', methods=['POST'])
 def create_activity():
     """
     Create a new activity
@@ -127,7 +126,7 @@ def create_activity():
         return jsonify({"error": str(e)}), 400
 
 
-@activites_bp.route('/<int:activity_id>', methods=['PUT'])
+@activities_bp.route('/<int:activity_id>', methods=['PUT'])
 def update_activity(activity_id):
     """
     Update an activity
@@ -167,7 +166,7 @@ def update_activity(activity_id):
         return jsonify({"error": str(e)}), 400
 
 
-@activites_bp.route('/<int:activity_id>', methods=['DELETE'])
+@activities_bp.route('/<int:activity_id>', methods=['DELETE'])
 def delete_activity(activity_id):
     """
     Delete an activity
