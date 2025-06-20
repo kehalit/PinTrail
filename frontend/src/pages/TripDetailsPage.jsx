@@ -8,6 +8,7 @@ import LocationSearch from "../components/LocationSearch";
 import MapController from "../components/MapController";
 import ActivityForm from "../components/ActivityForm";
 import { toast } from "react-hot-toast";
+import ConfirmModal from "../components/ConfirmModal";
 
 
 const TripDetailsPage = () => {
@@ -27,7 +28,8 @@ const TripDetailsPage = () => {
   const [selectedActivityId, setSelectedActivityId] = useState(null);
   const [editingActivity, setEditingActivity] = useState(null);
 
-
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [activityToDelete, setActivityToDelete] = useState(null);
 
   const activityRefs = useRef({});
 
@@ -120,16 +122,18 @@ const TripDetailsPage = () => {
     }
   };
 
-  const handleDelete = async (activityId) => {
+  const handleDeleteConfirmed = async () => {
     try {
-      await deleteActivity(activityId);
+      await deleteActivity(activityToDelete);
       toast.success("Activity deleted successfully!");
       await refreshActivities();
+      setShowConfirmModal(false);
     } catch (error) {
       console.error("Error deleting activity:", error);
       toast.error("Failed to delete activity.");
     }
   };
+
 
 
   return (
@@ -226,7 +230,8 @@ const TripDetailsPage = () => {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDelete(act.id);
+                          setActivityToDelete(act.id);
+                          setShowConfirmModal(true);
                         }}
                         className="mt-2 px-3 py-2 bg-red-500 text-white rounded"
                       >
@@ -273,7 +278,15 @@ const TripDetailsPage = () => {
           tripId={trip.id}
           refreshActivities={refreshActivities}
           loading={loading}
-          existingActivity={editingActivity} // Pass to form
+          existingActivity={editingActivity}
+        />
+      )}
+
+      {showConfirmModal && (
+        <ConfirmModal
+          message="Are you sure you want to delete this activity?"
+          onConfirm={handleDeleteConfirmed}
+          onCancel={() => setShowConfirmModal(false)}
         />
       )}
 

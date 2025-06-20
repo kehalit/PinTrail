@@ -3,7 +3,9 @@ import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from "re
 import { AuthContext } from "../context/AuthContext";
 import { toast } from "react-hot-toast";
 import { fetchTripsByUserId, deleteTrip } from "../api/trips";
-import { useNavigate } from "react-router-dom"; 
+import { useNavigate } from "react-router-dom";
+import ConfirmModal from "../components/ConfirmModal";
+
 
 const TripsMap = ({
   setTripForm,
@@ -16,10 +18,16 @@ const TripsMap = ({
   locationName,
   mapZoom,
   setLocalClickedLocation,
+  showDeleteModal,
+  setShowDeleteModal
+
 }) => {
   const [trips, setTrips] = useState([]);
   const { user } = useContext(AuthContext);
-  const navigate = useNavigate(); 
+  const [tripToDelete, setTripToDelete] = useState(null);
+
+
+  const navigate = useNavigate();
   useEffect(() => {
     if (!user) return;
 
@@ -56,14 +64,16 @@ const TripsMap = ({
     return null;
   };
 
-  const handleDelete = async (tripId) => {
+  const handleDeleteTrip = async (tripId) => {
     try {
       await deleteTrip(tripId);
-      toast.success("Trip deleted successfully");
+      toast.success("Trip deleted successfully!");
       setRefreshTrips((prev) => !prev);
     } catch (error) {
       console.error("Error deleting trip:", error);
-      toast.error("Error deleting trip");
+      toast.error("Failed to delete trip.");
+    } finally {
+      setShowDeleteModal(false);
     }
   };
 
@@ -87,7 +97,7 @@ const TripsMap = ({
                 <div className="text-center">
                   <h3
                     className="font-bold text-blue-600 cursor-pointer hover:underline"
-                    onClick={() => navigate(`/trips/${trip.id}`)} 
+                    onClick={() => navigate(`/trips/${trip.id}`)}
                   >
                     {trip.title}
                   </h3>
@@ -99,16 +109,16 @@ const TripsMap = ({
                     <button
                       onClick={() => handleEdit(trip)}
                       className="px-3 py-1 bg-yellow-500 text-white rounded">
-                    
+
                       Edit
                     </button>
                     <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(trip.id);
+                      onClick={() => {
+                        setTripToDelete(trip.id);
+                        setShowDeleteModal(true);
                       }}
-                      className="mt-2 px-4 py-2 bg-red-500 text-white rounded">
-                  
+                      className="px-4 py-2 bg-red-500 text-white rounded"
+                    >
                       Delete
                     </button>
                   </div>
@@ -132,6 +142,20 @@ const TripsMap = ({
           </Marker>
         )}
       </MapContainer>
+
+      {showDeleteModal && (
+        <ConfirmModal
+          title="Delete Trip"
+          message="Are you sure you want to delete this trip? This action cannot be undone."
+          onConfirm={() => handleDeleteTrip(tripToDelete)}
+          onCancel={() => setShowDeleteModal(false)}
+          confirmText="Delete"
+          cancelText="Cancel"
+          confirmButtonColor="bg-red-500"
+        />
+      )}
+
+
     </div>
   );
 };

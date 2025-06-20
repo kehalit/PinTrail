@@ -14,6 +14,8 @@ const Dashboard = () => {
   const [mapZoom, setMapZoom] = useState(3);
   const [localClickedLocation, setLocalClickedLocation] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
 
 
   return (
@@ -58,6 +60,9 @@ const Dashboard = () => {
           showSearchPin={selectedLocation !== null && locationName !== ""}
           localClickedLocation={localClickedLocation}
           setLocalClickedLocation={setLocalClickedLocation}
+          showDeleteModal ={showDeleteModal}
+          setShowDeleteModal ={setShowDeleteModal}
+
         />
       </div> 
     </div>
