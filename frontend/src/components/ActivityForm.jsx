@@ -1,25 +1,24 @@
 import React, { useState } from "react";
-
 import { toast } from "react-hot-toast";
-import { createActivity } from "../api/activities";
+import { createActivity, updateActivity } from "../api/activities";
 
-const ActivityForm = ({ location, closeForm, tripId, refreshActivities }) => {
+const ActivityForm = ({ location, closeForm, tripId, refreshActivities, existingActivity }) => {
 
   const [formData, setFormData] = useState({
-    name: "",
-    location: "",
-    type: "",
-    notes: "",
-    cost: "",
-    rating: "",
-    lat: location?.lat || 0,
-    lng: location?.lng || 0,
-    trip_id: tripId,
+    name: existingActivity ? existingActivity.name : "",
+    location: existingActivity ? existingActivity.location : "",
+    type: existingActivity ? existingActivity.type : "",
+    notes: existingActivity ? existingActivity.notes : "",
+    cost: existingActivity ? existingActivity.cost : "",
+    rating: existingActivity ? existingActivity.rating : "",
+    lat: existingActivity ? existingActivity.lat : location?.lat,
+    lng: existingActivity ? existingActivity.lng : location?.lng
   });
 
+
   const [loading, setLoading] = useState(false);
-  
-  
+
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -30,24 +29,26 @@ const ActivityForm = ({ location, closeForm, tripId, refreshActivities }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
 
-  
     try {
-      await createActivity(formData);
-      toast.success("Activity added successfully!");
-      refreshActivities();
+      if (existingActivity) {
+        await updateActivity(existingActivity.id, formData);
+        toast.success("Activity updated successfully!");
+      } else {
+        await createActivity(tripId, formData);
+        toast.success("Activity added successfully!");
+      }
+    
+      await refreshActivities();
       closeForm();
     } catch (error) {
-      console.error("Error creating activity:", error);
-      toast.error("Failed to add activity.");
+      console.error("Error saving activity:", error);
+      toast.error("Something went wrong while saving activity.");
     }
-    finally {
-      setLoading(false);
-    }
+    
   };
-  
-  
+
+
 
   return (
     <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 backdrop-blur-md backdrop-brightness-75 flex items-center justify-center z-[9999]">
@@ -130,14 +131,16 @@ const ActivityForm = ({ location, closeForm, tripId, refreshActivities }) => {
 
           {/* Coordinates Preview */}
           <div className="text-sm text-gray-500">
-            Selected Location: {formData.lat.toFixed(4)}, {formData.lng.toFixed(4)}
+            {formData.lat && formData.lng
+              ? `Selected Location: ${formData.lat.toFixed(4)}, ${formData.lng.toFixed(4)}`
+              : 'No location selected'}
           </div>
 
           <div className="flex justify-end space-x-2">
-            <button 
-            type="submit" 
-            disabled={loading}
-            className="px-4 py-2 bg-blue-500 text-white rounded">
+            <button
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-blue-500 text-white rounded">
               {loading ? "Adding..." : "Save Activity"}
             </button>
             <button

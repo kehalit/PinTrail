@@ -3,10 +3,11 @@ import { useParams } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { fetchTripById } from "../api/trips";
-import { getActivitiesByTripId } from "../api/activities";
+import { getActivitiesByTripId, deleteActivity } from "../api/activities";
 import LocationSearch from "../components/LocationSearch";
 import MapController from "../components/MapController";
 import ActivityForm from "../components/ActivityForm";
+import { toast } from "react-hot-toast";
 
 
 const TripDetailsPage = () => {
@@ -15,18 +16,17 @@ const TripDetailsPage = () => {
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [mapCenter, setMapCenter] = useState([39.6953, 3.0176]);
   const [mapZoom, setMapZoom] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchedLocation, setSearchedLocation] = useState(null);
   const [locationName, setLocationName] = useState("");
-
   const [showActivityForm, setShowActivityForm] = useState(false);
   const [activityLocation, setActivityLocation] = useState(null);
-
   const [loadingActivities, setLoadingActivities] = useState(false);
   const [selectedActivityId, setSelectedActivityId] = useState(null);
+  const [editingActivity, setEditingActivity] = useState(null);
+
 
 
   const activityRefs = useRef({});
@@ -37,7 +37,7 @@ const TripDetailsPage = () => {
       return () => clearTimeout(timer);
     }
   }, [selectedActivityId]);
-  
+
 
   const refreshActivities = async () => {
     try {
@@ -110,7 +110,7 @@ const TripDetailsPage = () => {
 
   const handleActivitySelect = (activityId) => {
     setSelectedActivityId(activityId);
-  
+
     const activityElement = activityRefs.current[activityId];
     if (activityElement) {
       activityElement.scrollIntoView({
@@ -119,6 +119,18 @@ const TripDetailsPage = () => {
       });
     }
   };
+
+  const handleDelete = async (activityId) => {
+    try {
+      await deleteActivity(activityId);
+      toast.success("Activity deleted successfully!");
+      await refreshActivities();
+    } catch (error) {
+      console.error("Error deleting activity:", error);
+      toast.error("Failed to delete activity.");
+    }
+  };
+
 
   return (
     <div className="max-w-6xl mx-auto p-8 flex flex-col md:flex-row gap-6">
@@ -134,20 +146,19 @@ const TripDetailsPage = () => {
           <ul className="space-y-3 max-h-[60vh] overflow-y-auto">
             {activities.map((activity) => (
               <li
-              key={activity.id}
-              ref={(el) => (activityRefs.current[activity.id] = el)}
-              className={`border border-gray-200 rounded p-3 transition-colors duration-500 ${
-                selectedActivityId === activity.id ? "bg-blue-200" : "bg-white"
-              }`}
-            >
-              <h3 className="font-semibold">{activity.name}</h3>
-              <p className="text-sm text-gray-600">{activity.location}</p>
-              <p className="text-sm text-gray-600">{activity.type}</p>
-              {activity.notes && <p className="text-sm text-gray-500 italic">Notes: {activity.notes}</p>}
-              {activity.cost !== undefined && <p className="text-sm text-gray-600">Cost: ${activity.cost}</p>}
-              {activity.rating !== undefined && <p className="text-sm text-yellow-500">Rating: {activity.rating}</p>}
-            </li>
-            
+                key={activity.id}
+                ref={(el) => (activityRefs.current[activity.id] = el)}
+                className={`border border-gray-200 rounded p-3 transition-colors duration-500 ${selectedActivityId === activity.id ? "bg-blue-200" : "bg-white"
+                  }`}
+              >
+                <h3 className="font-semibold">{activity.name}</h3>
+                <p className="text-sm text-gray-600">{activity.location}</p>
+                <p className="text-sm text-gray-600">{activity.type}</p>
+                {activity.notes && <p className="text-sm text-gray-500 italic">Notes: {activity.notes}</p>}
+                {activity.cost !== undefined && <p className="text-sm text-gray-600">Cost: ${activity.cost}</p>}
+                {activity.rating !== undefined && <p className="text-sm text-yellow-500">Rating: {activity.rating}</p>}
+              </li>
+
             ))}
           </ul>
         )}
@@ -206,18 +217,22 @@ const TripDetailsPage = () => {
 
                     <div className="flex justify-center space-x-2 mt-2">
                       <button
-                        onClick={() => handleEdit(trip)}
-                        className="mt-2 px-3 py-2 bg-yellow-500 text-white rounded">
+                        onClick={() => setEditingActivity(act)}
+                        className="mt-2 px-3 py-2 bg-yellow-500 text-white rounded"
+                      >
                         Edit
                       </button>
+
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleDelete(trip.id);
+                          handleDelete(act.id);
                         }}
-                        className="mt-2 px-3 py-2 bg-red-500 text-white rounded">
+                        className="mt-2 px-3 py-2 bg-red-500 text-white rounded"
+                      >
                         Delete
                       </button>
+
                     </div>
                   </div>
                 </Popup>
@@ -248,19 +263,20 @@ const TripDetailsPage = () => {
 
       </div>
       {/* Activity Form Modal */}
-      {showActivityForm && (
+      {(showActivityForm || editingActivity) && (
         <ActivityForm
-          location={activityLocation}
+          location={activityLocation || (editingActivity && { lat: editingActivity.lat, lng: editingActivity.lng })}
           closeForm={() => {
             setShowActivityForm(false);
-            setActivityLocation(null);
+            setEditingActivity(null);
           }}
           tripId={trip.id}
           refreshActivities={refreshActivities}
           loading={loading}
-
+          existingActivity={editingActivity} // Pass to form
         />
       )}
+
     </div>
   );
 };
