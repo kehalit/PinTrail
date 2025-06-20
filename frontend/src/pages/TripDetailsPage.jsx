@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { fetchTripById } from "../api/trips";
 import { getActivitiesByTripId } from "../api/activities";
@@ -16,7 +16,7 @@ const TripDetailsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [mapCenter, setMapCenter] = useState([39.6953, 3.0176]); 
+  const [mapCenter, setMapCenter] = useState([39.6953, 3.0176]);
   const [mapZoom, setMapZoom] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchedLocation, setSearchedLocation] = useState(null);
@@ -24,9 +24,9 @@ const TripDetailsPage = () => {
 
   const [showActivityForm, setShowActivityForm] = useState(false);
   const [activityLocation, setActivityLocation] = useState(null);
-    
+
   const [loadingActivities, setLoadingActivities] = useState(false);
-  
+
   const refreshActivities = async () => {
     try {
       const activitiesData = await getActivitiesByTripId(tripId);
@@ -47,7 +47,7 @@ const TripDetailsPage = () => {
       setLoadingActivities(false);
     }
   };
-  
+
 
   useEffect(() => {
     async function fetchTripDetails() {
@@ -84,6 +84,18 @@ const TripDetailsPage = () => {
   if (!trip) return <div className="p-6 text-center">Trip not found.</div>;
 
   const { city, country, description } = trip;
+
+  const MapClickHandler = () => {
+    useMapEvents({
+      click(e) {
+        const newLocation = { lat: e.latlng.lat, lng: e.latlng.lng, name: "Custom Location" };
+        setActivityLocation(newLocation);  
+        setShowActivityForm(true);         
+      },
+    });
+    return null;
+  };
+  
 
   return (
     <div className="max-w-6xl mx-auto p-8 flex flex-col md:flex-row gap-6">
@@ -142,11 +154,11 @@ const TripDetailsPage = () => {
 
         <MapContainer center={mapCenter} zoom={mapZoom} style={{ height: "80vh", width: "100%" }} >
           <MapController center={mapCenter} zoom={mapZoom} />
-
           <TileLayer
             attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+             <MapClickHandler />
 
           {activities.map((act) =>
             act.lat && act.lng ? (
@@ -160,8 +172,7 @@ const TripDetailsPage = () => {
             <Marker position={[searchedLocation.lat, searchedLocation.lng]}>
               <Popup>
                 <div>{locationName || "Selected Location"}</div>
-                <button 
-            
+                <button
                   onClick={() => {
                     setActivityLocation({ lat: searchedLocation.lat, lng: searchedLocation.lng });
                     setShowActivityForm(true);
@@ -182,11 +193,14 @@ const TripDetailsPage = () => {
       {showActivityForm && (
         <ActivityForm
           location={activityLocation}
-          closeForm={() => setShowActivityForm(false)}
+          closeForm={() => {
+            setShowActivityForm(false);
+            setActivityLocation(null);
+          }}
           tripId={trip.id}
           refreshActivities={refreshActivities}
           loading={loading}
-          
+
         />
       )}
     </div>
