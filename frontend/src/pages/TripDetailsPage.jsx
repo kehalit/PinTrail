@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -26,6 +26,10 @@ const TripDetailsPage = () => {
   const [activityLocation, setActivityLocation] = useState(null);
 
   const [loadingActivities, setLoadingActivities] = useState(false);
+  const [selectedActivityId, setSelectedActivityId] = useState(null);
+
+
+  const activityRefs = useRef({});
 
   const refreshActivities = async () => {
     try {
@@ -89,13 +93,24 @@ const TripDetailsPage = () => {
     useMapEvents({
       click(e) {
         const newLocation = { lat: e.latlng.lat, lng: e.latlng.lng, name: "Custom Location" };
-        setActivityLocation(newLocation);  
-        setShowActivityForm(true);         
+        setActivityLocation(newLocation);
+        setShowActivityForm(true);
       },
     });
     return null;
   };
+
+  const handleActivitySelect = (activityId) => {
+    setSelectedActivityId(activityId);
   
+    const activityElement = activityRefs.current[activityId];
+    if (activityElement) {
+      activityElement.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    }
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-8 flex flex-col md:flex-row gap-6">
@@ -110,7 +125,10 @@ const TripDetailsPage = () => {
         ) : (
           <ul className="space-y-3 max-h-[60vh] overflow-y-auto">
             {activities.map((activity) => (
-              <li key={activity.id} className="border border-gray-200 rounded p-3">
+              <li key={activity.id}
+                ref={(el) => (activityRefs.current[activity.id] = el)}
+                className={`border border-gray-200 rounded p-3 ${selectedActivityId === activity.id ? "bg-yellow-100" : ""
+                  }`}>
                 <h3 className="font-semibold">{activity.name}</h3>
                 <p className="text-sm text-gray-600">{activity.location}</p>
                 <p className="text-sm text-gray-600">{activity.type}</p>
@@ -158,12 +176,40 @@ const TripDetailsPage = () => {
             attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-             <MapClickHandler />
+          <MapClickHandler />
 
           {activities.map((act) =>
             act.lat && act.lng ? (
               <Marker key={act.id} position={[act.lat, act.lng]}>
-                <Popup>{act.name}</Popup>
+                <Popup>
+                  <div className="text-center">
+                    <h3
+                      className="font-bold text-blue-600 cursor-pointer hover:underline"
+                      onClick={() => handleActivitySelect(act.id)}
+                    >
+                      {act.name}
+                    </h3>
+                    <p>{act.location}, {act.type}</p>
+                    <p>Rating: {act.rating}</p>
+
+                    <div className="flex justify-center space-x-2 mt-2">
+                      <button
+                        onClick={() => handleEdit(trip)}
+                        className="mt-2 px-3 py-2 bg-yellow-500 text-white rounded">
+                        Edit
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(trip.id);
+                        }}
+                        className="mt-2 px-3 py-2 bg-red-500 text-white rounded">
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </Popup>
+
               </Marker>
             ) : null
           )}
