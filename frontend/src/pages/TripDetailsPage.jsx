@@ -120,9 +120,6 @@ const TripDetailsPage = () => {
     }
   };
 
-
-  
-
   return (
     <div className="max-w-6xl mx-auto p-8 flex flex-col md:flex-row gap-6">
       {/* Left: Trip Details + Activities */}
