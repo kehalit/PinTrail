@@ -31,6 +31,14 @@ const TripDetailsPage = () => {
 
   const activityRefs = useRef({});
 
+  useEffect(() => {
+    if (selectedActivityId) {
+      const timer = setTimeout(() => setSelectedActivityId(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedActivityId]);
+  
+
   const refreshActivities = async () => {
     try {
       const activitiesData = await getActivitiesByTripId(tripId);
@@ -112,6 +120,9 @@ const TripDetailsPage = () => {
     }
   };
 
+
+  
+
   return (
     <div className="max-w-6xl mx-auto p-8 flex flex-col md:flex-row gap-6">
       {/* Left: Trip Details + Activities */}
@@ -125,17 +136,21 @@ const TripDetailsPage = () => {
         ) : (
           <ul className="space-y-3 max-h-[60vh] overflow-y-auto">
             {activities.map((activity) => (
-              <li key={activity.id}
-                ref={(el) => (activityRefs.current[activity.id] = el)}
-                className={`border border-gray-200 rounded p-3 ${selectedActivityId === activity.id ? "bg-yellow-100" : ""
-                  }`}>
-                <h3 className="font-semibold">{activity.name}</h3>
-                <p className="text-sm text-gray-600">{activity.location}</p>
-                <p className="text-sm text-gray-600">{activity.type}</p>
-                {activity.notes && <p className="text-sm text-gray-500 italic">Notes: {activity.notes}</p>}
-                {activity.cost !== undefined && <p className="text-sm text-gray-600">Cost: ${activity.cost}</p>}
-                {activity.rating !== undefined && <p className="text-sm text-yellow-500">Rating: {activity.rating}</p>}
-              </li>
+              <li
+              key={activity.id}
+              ref={(el) => (activityRefs.current[activity.id] = el)}
+              className={`border border-gray-200 rounded p-3 transition-colors duration-500 ${
+                selectedActivityId === activity.id ? "bg-blue-200" : "bg-white"
+              }`}
+            >
+              <h3 className="font-semibold">{activity.name}</h3>
+              <p className="text-sm text-gray-600">{activity.location}</p>
+              <p className="text-sm text-gray-600">{activity.type}</p>
+              {activity.notes && <p className="text-sm text-gray-500 italic">Notes: {activity.notes}</p>}
+              {activity.cost !== undefined && <p className="text-sm text-gray-600">Cost: ${activity.cost}</p>}
+              {activity.rating !== undefined && <p className="text-sm text-yellow-500">Rating: {activity.rating}</p>}
+            </li>
+            
             ))}
           </ul>
         )}
