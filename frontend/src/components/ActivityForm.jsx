@@ -12,7 +12,8 @@ const ActivityForm = ({ location, closeForm, tripId, refreshActivities, existing
     cost: existingActivity ? existingActivity.cost : "",
     rating: existingActivity ? existingActivity.rating : "",
     lat: existingActivity ? existingActivity.lat : location?.lat,
-    lng: existingActivity ? existingActivity.lng : location?.lng
+    lng: existingActivity ? existingActivity.lng : location?.lng,
+    trip_id: existingActivity ? existingActivity.tripId : tripId
   });
 
 
@@ -29,26 +30,30 @@ const ActivityForm = ({ location, closeForm, tripId, refreshActivities, existing
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
       if (existingActivity) {
+
         await updateActivity(existingActivity.id, formData);
         toast.success("Activity updated successfully!");
-      } else {
-        await createActivity(tripId, formData);
-        toast.success("Activity added successfully!");
+      } else  {
+
+      await createActivity(formData);
+      toast.success("Activity added successfully!");
       }
-    
       await refreshActivities();
       closeForm();
     } catch (error) {
-      console.error("Error saving activity:", error);
-      toast.error("Something went wrong while saving activity.");
+      console.error("Error creating activity:", error);
+      toast.error("Failed to add activity.");
     }
-    
+    finally {
+      setLoading(false);
+    }
   };
 
-
+  
 
   return (
     <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 backdrop-blur-md backdrop-brightness-75 flex items-center justify-center z-[9999]">
@@ -116,12 +121,13 @@ const ActivityForm = ({ location, closeForm, tripId, refreshActivities, existing
             </div>
 
             <div className="flex-1">
-              <label className="block text-sm font-medium">Rating (0-5)</label>
+              <label className="block text-sm font-medium">Rating (0-10)</label>
               <input
                 type="number"
                 name="rating"
                 min="0"
-                max="5"
+                max= "10"
+                step="0.1"
                 value={formData.rating}
                 onChange={handleChange}
                 className="w-full border p-2 rounded"

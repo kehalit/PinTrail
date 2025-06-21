@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { fetchTripById } from "../api/trips";
 import { getActivitiesByTripId, deleteActivity } from "../api/activities";
@@ -30,8 +30,11 @@ const TripDetailsPage = () => {
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [activityToDelete, setActivityToDelete] = useState(null);
+  const [selectedActivity, setSelectedActivity] = useState(null);
+
 
   const activityRefs = useRef({});
+  const markerRefs = useRef({});
 
   useEffect(() => {
     if (selectedActivityId) {
@@ -112,7 +115,16 @@ const TripDetailsPage = () => {
 
   const handleActivitySelect = (activityId) => {
     setSelectedActivityId(activityId);
-
+  
+    // Set selected activity for map centering
+    const activity = activities.find((act) => act.id === activityId);
+    setSelectedActivity(activity);
+  
+    const marker = markerRefs.current[activityId];
+    if (marker) {
+      marker.openPopup(); 
+    }
+  
     const activityElement = activityRefs.current[activityId];
     if (activityElement) {
       activityElement.scrollIntoView({
@@ -121,6 +133,9 @@ const TripDetailsPage = () => {
       });
     }
   };
+  
+  
+  
 
   const handleDeleteConfirmed = async () => {
     try {
@@ -134,6 +149,17 @@ const TripDetailsPage = () => {
     }
   };
 
+  const ChangeMapView = ({ activity }) => {
+    const map = useMap();
+
+    useEffect(() => {
+      if (activity) {
+        map.setView([activity.lat, activity.lng], 15);
+      }
+    }, [activity, map]);
+
+    return null;
+  };
 
 
   return (
@@ -155,7 +181,13 @@ const TripDetailsPage = () => {
                 className={`border border-gray-200 rounded p-3 transition-colors duration-500 ${selectedActivityId === activity.id ? "bg-blue-200" : "bg-white"
                   }`}
               >
-                <h3 className="font-semibold">{activity.name}</h3>
+                <h3
+                  className="font-semibold cursor-pointer text-blue-600 hover:underline"
+                  onClick={() => setSelectedActivity(activity)}
+                >
+                  {activity.name}
+                </h3>
+
                 <p className="text-sm text-gray-600">{activity.location}</p>
                 <p className="text-sm text-gray-600">{activity.type}</p>
                 {activity.notes && <p className="text-sm text-gray-500 italic">Notes: {activity.notes}</p>}
@@ -204,10 +236,19 @@ const TripDetailsPage = () => {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
           <MapClickHandler />
+          <ChangeMapView activity={selectedActivity} />
 
           {activities.map((act) =>
             act.lat && act.lng ? (
-              <Marker key={act.id} position={[act.lat, act.lng]}>
+              <Marker
+                key={act.id}
+                position={[act.lat, act.lng]}
+                ref={(ref) => {
+                  if (ref) {
+                    markerRefs.current[act.id] = ref;
+                  }
+                }}
+              >
                 <Popup>
                   <div className="text-center">
                     <h3
