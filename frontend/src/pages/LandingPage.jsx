@@ -1,7 +1,11 @@
-import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap } from "react-leaflet";
+import { useRef, useEffect } from "react";
+import HeroSection from "../components/HeroSection";
+import PopularDestinations from "../components/PopularDestinations";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
-import { useEffect } from "react";
 import "leaflet/dist/leaflet.css";
+import Footer from "../components/Footer";
+
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -32,40 +36,58 @@ function FitBounds({ markers }) {
 }
 
 export default function LandingPage() {
+  const mapSectionRef = useRef();
+  const UNSPLASH_ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
+
+  const scrollToExplore = () => {
+    mapSectionRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <div className="h-screen flex flex-col">
-      <header className="p-4 bg-blue-600 text-white text-center font-bold text-xl">
-        Explore Continents
-      </header>
+    <div className="relative flex flex-col z-10">
+      {/* Map as full screen fixed background */}
+      <MapContainer
+        center={[40, -1]}
+        zoom={3}
+        scrollWheelZoom={false}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          height: "70vh",
+          width: "100%",
+          zIndex: 0,
+          filter: "brightness(0.6)", // darken map for overlay text contrast
+        }}
+      >
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        {continentMarkers.map(continent => (
+          <Marker key={continent.name} position={continent.position}>
+            <Popup autoOpen={false} closeButton={true} autoClose={false}>
+              <div className="text-center">
+                <h2 className="font-bold text-lg mb-1">{continent.name}</h2>
+                <p>{continent.description}</p>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+        <FitBounds markers={continentMarkers} />
+      </MapContainer>
 
-      <div className="flex-grow relative">
-    
-           <MapContainer center={[40, -1]} zoom={3} style={{ height: "100vh", width: "100vw" }}>
-                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" noWrap={true} />
-                 
-          {continentMarkers.map(continent => (
-            <Marker key={continent.name} position={continent.position}>
-              <Popup autoOpen={true} closeButton={false} autoClose={false}>
-                <div className="text-center">
-                  <h2 className="font-bold text-lg mb-1">{continent.name}</h2>
-                  <p>{continent.description}</p>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
-
-  
-        </MapContainer>
-
-        <div className="absolute bottom-5 left-5 bg-white bg-opacity-90 rounded p-3 shadow-lg max-w-xs z-10">
-          <h3 className="font-semibold mb-2">Continents</h3>
-          <ul className="list-disc list-inside text-sm">
-            {continentMarkers.map(continent => (
-              <li key={continent.name}>{continent.name}</li>
-            ))}
-          </ul>
-        </div>
+      {/* HeroSection content over the map */}
+      <div
+        className="relative z-10 max-w-4xl mx-auto px-6 py-24 text-white"
+        style={{ minHeight: "70vh" }}
+      >
+        <HeroSection onStart={scrollToExplore} />
       </div>
+
+      {/* Popular Destinations below */}
+      <div ref={mapSectionRef} className="relative z-10 bg-white py-16 px-6">
+        <PopularDestinations accessKey={UNSPLASH_ACCESS_KEY} />
+      </div>
+      <Footer />
     </div>
+    
   );
 }
