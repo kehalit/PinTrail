@@ -134,8 +134,6 @@ const TripDetailsPage = () => {
     }
   };
   
-  
-  
 
   const handleDeleteConfirmed = async () => {
     try {

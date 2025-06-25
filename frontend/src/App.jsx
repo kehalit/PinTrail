@@ -9,16 +9,20 @@ import ErrorBoundary from "./components/ErrorBoundary";
 
 
 
+
 function App() {
+ 
+
   return (
+
     <BrowserRouter>
-     <ErrorBoundary>
-     <Header />
-     <Toaster position="top-right" reverseOrder={false} />
-      <Router />
-     </ErrorBoundary>
+      <ErrorBoundary>
+        <Header />
+        <Toaster position="top-right" reverseOrder={false} />
+        <Router />
+      </ErrorBoundary>
     </BrowserRouter>
-  
+
   );
 }
 

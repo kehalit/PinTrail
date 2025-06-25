@@ -1,8 +1,10 @@
-import React, { useState, useContext , useEffect} from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import { loginUser } from '../api/auth';
+import { toast } from 'react-hot-toast';
 
-const LoginPage = () => {
+const LoginPage = ({ setToken }) => {
   const { login, user } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -18,30 +20,23 @@ const LoginPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setErrorMsg(''); // Clear any previous error
+    setErrorMsg(''); 
 
     try {
-      const res = await fetch('http://127.0.0.1:5000/users/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const res = await loginUser({ email, password });
 
-      const data = await res.json();
+      // Save token to localStorage
+      localStorage.setItem('token', res.access_token);
 
-      if (!res.ok) {
-        setErrorMsg(data.error || 'Login failed. Please check your credentials.');
-        return;
-      }
+      // Update global auth context
+      login(res.user, res.access_token);
 
-      login(data); // ✅ update global context
+      toast.success('Login successful!');
       navigate('/dashboard');
-    
-    } catch (err) {
-      console.error('Login error:', err);
-      setErrorMsg('An error occurred. Please try again');
+
+    } catch (error) {
+      console.error('Login error:', error);
+      setErrorMsg('Invalid email or password. Please try again.');
     }
   };
 
