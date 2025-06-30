@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { debounce } from "lodash";
 import { fetchAllTrips } from "../api/trips";
+import { useNavigate } from "react-router-dom";
+
 
 const UNSPLASH_BASE_URL = "https://api.unsplash.com/search/photos";
 const UNSPLASH_ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
@@ -13,6 +15,8 @@ const SearchPage = () => {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [searchInput, setSearchInput] = useState("");
+  const navigate = useNavigate();
+
 
   useEffect(() => {
     fetchTrips();
@@ -21,7 +25,7 @@ const SearchPage = () => {
   const fetchTrips = async () => {
     try {
       setLoading(true);
-  
+
       const data = await fetchAllTrips();
       const publicTrips = data.filter(trip => trip.is_public === true);
       const tripsWithImages = await Promise.all(
@@ -31,7 +35,7 @@ const SearchPage = () => {
           return { ...trip, image_url: imageUrl };
         })
       );
-  
+
       setTrips(tripsWithImages);
     } catch (err) {
       console.error("Error fetching trips or images:", err);
@@ -39,7 +43,7 @@ const SearchPage = () => {
       setLoading(false);
     }
   };
-  
+
 
   const fetchUnsplashImage = async (query) => {
     try {
@@ -87,7 +91,7 @@ const SearchPage = () => {
       </div>
 
       {loading ? (
-        <p className="text-center text-gray-500">Loading trips...</p>
+        <p className="text-center text-gray-500 dark:bg-gray-900 text-black dark:text-white">Loading trips...</p>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredTrips.length > 0 ? (
@@ -109,10 +113,15 @@ const SearchPage = () => {
                 </div>
 
                 <div className="p-4">
-                  <h2 className="text-2xl font-semibold mb-2">{trip.title}</h2>
-                  <p className="text-gray-700 mb-1">{trip.city}, {trip.country}</p>
-                  <p className="text-gray-500 text-sm mb-3">{trip.description}</p>
-                  <p className="text-gray-600 text-sm">
+                  <h2
+                    className="font-bold text-2xl font-semibold mb-2 cursor-pointer hover:underline"
+                    onClick={() => navigate(`/trips/${trip.id}`)}
+                  >
+                    {trip.title}
+                  </h2>
+                  <p className="text-gray-700 mb-1 dark:bg-gray-900 text-black dark:text-white">{trip.city}, {trip.country}</p>
+                  <p className="text-gray-500 text-sm mb-3 dark:bg-gray-900 text-black dark:text-white">{trip.description}</p>
+                  <p className="text-gray-600 text-sm dark:bg-gray-900 text-black dark:text-white">
                     <strong>{trip.start_date}</strong> → <strong>{trip.end_date}</strong>
                   </p>
                 </div>

@@ -56,73 +56,75 @@ const ActivityForm = ({ location, closeForm, tripId, refreshActivities, existing
   
 
   return (
-    <div className="fixed top-0 left-0 w-full h-full backdrop-blur-sm bg-white/10 flex items-center justify-center z-[9999]">
-
-      <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+    <div className="fixed top-0 left-0 w-full h-full backdrop-blur-sm bg-gray-50 px-4 dark:bg-gray-900 text-black dark:text-white flex items-center justify-center z-[9999]
+    ">
+      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg dark:bg-gray-800">
         <h2 className="text-lg font-bold mb-4">Add New Activity</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium">Activity Name</label>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Activity Name
+            </label>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full border p-2 rounded"
+              className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium">Location Name</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300"> Location Name</label>
             <input
               type="text"
               name="location"
               value={formData.location}
               onChange={handleChange}
-              className="w-full border p-2 rounded"
+              className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium">Type</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
             <input
               type="text"
               name="type"
               value={formData.type}
               onChange={handleChange}
-              className="w-full border p-2 rounded"
+              className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium">Notes</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
             <textarea
               name="notes"
               value={formData.notes}
               onChange={handleChange}
-              className="w-full border p-2 rounded"
+              className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               rows="3"
             />
           </div>
 
           <div className="flex space-x-4">
             <div className="flex-1">
-              <label className="block text-sm font-medium">Cost ($)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Cost ($)</label>
               <input
                 type="number"
                 name="cost"
                 value={formData.cost}
                 onChange={handleChange}
-                className="w-full border p-2 rounded"
+                className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
 
             <div className="flex-1">
-              <label className="block text-sm font-medium">Rating (0-10)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Rating (0-10)</label>
               <input
                 type="number"
                 name="rating"
