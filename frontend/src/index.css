@@ -1,9 +1,10 @@
 @import "tailwindcss";
-
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 html, body, #root {
+  @apply bg-white text-black dark:bg-gray-900 dark:text-white;
     margin: 0;
     padding: 0;
     height: 100%;
     width: 100%;
     overflow-x: hidden;
-  }
+  } 

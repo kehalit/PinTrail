@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useContext } from "react";
 import { useParams } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
@@ -9,6 +9,7 @@ import MapController from "../components/MapController";
 import ActivityForm from "../components/ActivityForm";
 import { toast } from "react-hot-toast";
 import ConfirmModal from "../components/ConfirmModal";
+import { ThemeContext } from "../context/ThemeContext"
 
 
 const TripDetailsPage = () => {
@@ -31,6 +32,7 @@ const TripDetailsPage = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [activityToDelete, setActivityToDelete] = useState(null);
   const [selectedActivity, setSelectedActivity] = useState(null);
+  const {theme} = useContext(ThemeContext)
 
 
   const activityRefs = useRef({});
@@ -134,8 +136,6 @@ const TripDetailsPage = () => {
     }
   };
   
-  
-  
 
   const handleDeleteConfirmed = async () => {
     try {
@@ -163,11 +163,13 @@ const TripDetailsPage = () => {
 
 
   return (
-    <div className="max-w-6xl mx-auto p-8 flex flex-col md:flex-row gap-6">
+    <div className="max-w-6xl mx-auto p-8 flex flex-col md:flex-row gap-6 bg-white dark:bg-gray-900 text-black dark:text-white">
+
+
       {/* Left: Trip Details + Activities */}
-      <div className="md:w-1/3 bg-white rounded-lg shadow-md p-20 overflow-y-auto max-h-[80vh]">
-        <h1 className="text-2xl font-bold mb-4">{city}, {country}</h1>
-        <p className="mb-4 text-gray-700">{description}</p>
+      <div className="md:w-1/3 dark:bg-gray-900 text-black bg-white dark:text-white rounded-lg shadow-md p-20 overflow-y-auto max-h-[80vh]">
+        <h1 className="text-2xl font-bold mb-4 ">{city}, {country}</h1>
+        <p className="mb-4 text-gray-700 dark:text-gray-300">{description}</p>
 
         <h2 className="text-xl font-semibold mb-2">Activities</h2>
         {activities.length === 0 ? (
@@ -178,7 +180,10 @@ const TripDetailsPage = () => {
               <li
                 key={activity.id}
                 ref={(el) => (activityRefs.current[activity.id] = el)}
-                className={`border border-gray-200 rounded p-3 transition-colors duration-500 ${selectedActivityId === activity.id ? "bg-blue-200" : "bg-white"
+                className={`border border-gray-200 dark:border-gray-700 rounded p-3 transition-colors duration-500 ${
+                  selectedActivityId === activity.id
+                    ? "bg-blue-200 dark:bg-blue-800"
+                    : "bg-white dark:bg-gray-800"
                   }`}
               >
                 <h3
@@ -188,11 +193,11 @@ const TripDetailsPage = () => {
                   {activity.name}
                 </h3>
 
-                <p className="text-sm text-gray-600">{activity.location}</p>
-                <p className="text-sm text-gray-600">{activity.type}</p>
-                {activity.notes && <p className="text-sm text-gray-500 italic">Notes: {activity.notes}</p>}
-                {activity.cost !== undefined && <p className="text-sm text-gray-600">Cost: ${activity.cost}</p>}
-                {activity.rating !== undefined && <p className="text-sm text-yellow-500">Rating: {activity.rating}</p>}
+                <p className="text-sm text-gray-600 dark:text-gray-300">{activity.location}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">{activity.type}</p>
+                {activity.notes && <p className="text-sm text-gray-500 italic dark:text-gray-300">Notes: {activity.notes}</p>}
+                {activity.cost !== undefined && <p className="text-sm text-gray-600 dark:text-gray-300">Cost: ${activity.cost}</p>}
+                {activity.rating !== undefined && <p className="text-sm text-yellow-500 dark:text-gray-300">Rating: {activity.rating}</p>}
               </li>
 
             ))}
@@ -232,9 +237,18 @@ const TripDetailsPage = () => {
         <MapContainer center={mapCenter} zoom={mapZoom} style={{ height: "80vh", width: "100%" }} >
           <MapController center={mapCenter} zoom={mapZoom} />
           <TileLayer
-            attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
+                    url={
+                      theme === "dark"
+                        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                        : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    }
+                    attribution={
+                      theme === "dark"
+                        ? '&copy; <a href="https://carto.com/">CARTO</a>'
+                        : '&copy; OpenStreetMap contributors'
+                    }
+                    noWrap={true}
+                  />
           <MapClickHandler />
           <ChangeMapView activity={selectedActivity} />
 

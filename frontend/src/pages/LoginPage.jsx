@@ -46,10 +46,10 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4 dark:bg-gray-900 text-black dark:text-white">
       <form
         onSubmit={handleLogin}
-        className="bg-white shadow-md rounded-lg p-8 w-full max-w-md space-y-4"
+        className="bg-white shadow-md rounded-lg p-8 w-full max-w-md space-y-4 dark:bg-gray-900 text-black dark:text-white"
       >
         <h2 className="text-2xl font-bold text-center text-blue-600">Sign In</h2>
 
@@ -64,13 +64,13 @@ const LoginPage = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full mt-1 p-2 border border-gray-300 rounded focus:outline-none focus:ring focus:border-blue-500"
+            className="w-full mt-1 p-2 border border-gray-300 rounded focus:outline-none focus:ring focus:border-blue-500 dark:bg-gray-900 text-black dark:text-white"
             placeholder="your@email.com"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium">Password</label>
+          <label className="block text-sm text-gray-600 dark:text-gray-300 font-medium">Password</label>
           <input
             type="password"
             value={password}

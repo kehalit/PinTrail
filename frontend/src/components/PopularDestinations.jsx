@@ -1,4 +1,4 @@
-// src/components/PopularDestinations.jsx
+
 import { useEffect, useState } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay } from "swiper/modules";
@@ -51,7 +51,7 @@ export default function PopularDestinations({ accessKey }) {
   }, [accessKey]);
 
   return (
-    <section className=" py-16 bg-white text-gray-800 px-6">
+    <section className=" py-16 bg-white text-gray-800 px-6 dark:bg-gray-900 text-black dark:text-white">
       <h2 className="text-3xl font-bold mb-8 text-center">Popular Destinations</h2>
 
       <Swiper

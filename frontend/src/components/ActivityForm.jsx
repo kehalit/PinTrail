@@ -56,7 +56,8 @@ const ActivityForm = ({ location, closeForm, tripId, refreshActivities, existing
   
 
   return (
-    <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 backdrop-blur-md backdrop-brightness-75 flex items-center justify-center z-[9999]">
+    <div className="fixed top-0 left-0 w-full h-full backdrop-blur-sm bg-white/10 flex items-center justify-center z-[9999]">
+
       <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
         <h2 className="text-lg font-bold mb-4">Add New Activity</h2>
 

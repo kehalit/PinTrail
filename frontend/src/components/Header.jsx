@@ -2,6 +2,8 @@ import { Link, useNavigate } from "react-router-dom";
 import React, { useState, useContext, useRef, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { AuthContext } from "../context/AuthContext";
+import { ThemeContext } from "../context/ThemeContext";
+
 
 const Header = ({ popupOpen }) => {
     const [menuOpen, setMenuOpen] = useState(false);
@@ -10,6 +12,7 @@ const Header = ({ popupOpen }) => {
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
     const [scrolling, setScrolling] = useState(false);
+    const { theme, toggleTheme } = useContext(ThemeContext);
 
     const toggleDropdown = () => setDropdownOpen((prev) => !prev);
 
@@ -41,9 +44,8 @@ const Header = ({ popupOpen }) => {
 
     return (
         <header
-            className={`fixed top-0 left-0 right-0 bg-white shadow z-50 backdrop-blur-md z-[1000] px-6 py-4 flex justify-between items-center border-b border-gray-200 shadow-sm transition-transform duration-500 ${
-                scrolling || popupOpen ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
-            }`}
+            className={`fixed top-0 left-0 right-0 bg-white dark:bg-gray-900 text-black dark:text-white shadow z-50 backdrop-blur-md z-[1000] px-6 py-4 flex justify-between items-center border-b border-gray-200 shadow-sm transition-transform duration-500 ${scrolling || popupOpen ? "-translate-y-full opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
+                }`}
         >
             {/* Logo & Explore */}
             <div className="flex items-center space-x-4">
@@ -60,9 +62,12 @@ const Header = ({ popupOpen }) => {
 
             {/* Right Side */}
             <div className="hidden md:flex items-center space-x-4">
+                <button onClick={toggleTheme}>
+                    {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+                </button>
                 {!user ? (
                     <>
-                        <Link to="/login" className="text-gray-700 font-medium hover:underline">
+                        <Link to="/login" className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                             Sign In
                         </Link>
                         <Link to="/register" className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-blue-700">
@@ -79,7 +84,7 @@ const Header = ({ popupOpen }) => {
                                 {user.username?.charAt(0).toUpperCase()}
                             </div>
                             <Link to="/dashboard" className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                                <span>{user.username}</span>   
+                                <span>{user.username}</span>
                             </Link>
                         </button>
 

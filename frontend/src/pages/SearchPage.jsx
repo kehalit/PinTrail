@@ -70,14 +70,14 @@ const SearchPage = () => {
   );
 
   return (
-    <div className="pt-28 px-4 min-h-screen bg-gray-50">
+    <div className="pt-28 px-4 min-h-screen bg-gray-50 dark:bg-gray-900 text-black dark:text-white">
       <h1 className="text-4xl font-bold mb-8 text-center">Explore Public Trips</h1>
 
       <div className="flex justify-center mb-10">
         <input
           type="text"
           placeholder="Search by title, city, or country"
-          className="w-full max-w-md border px-4 py-3 rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
+          className="w-full max-w-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-black dark:text-white px-4 py-3 rounded-xl shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
           value={searchInput}
           onChange={(e) => {
             setSearchInput(e.target.value);
@@ -94,7 +94,7 @@ const SearchPage = () => {
             filteredTrips.map((trip) => (
               <motion.div
                 key={trip.id}
-                className="bg-white rounded-2xl shadow hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
                 whileHover={{ scale: 1.02 }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

@@ -5,6 +5,8 @@ import { toast } from "react-hot-toast";
 import { fetchTripsByUserId, deleteTrip } from "../api/trips";
 import { useNavigate } from "react-router-dom";
 import ConfirmModal from "../components/ConfirmModal";
+import { ThemeContext } from "../context/ThemeContext";
+
 
 
 const TripsMap = ({
@@ -26,6 +28,7 @@ const TripsMap = ({
   const { user } = useContext(AuthContext);
   const [tripToDelete, setTripToDelete] = useState(null);
 
+  const { theme } = useContext(ThemeContext);
 
   const navigate = useNavigate();
   useEffect(() => {
@@ -85,9 +88,18 @@ const TripsMap = ({
 
   return (
     <div>
-      <MapContainer center={[40, -1]} zoom={3} style={{ height: "80vh", width: "100vw" }}>
+      <MapContainer center={[40, -1]} zoom={3} style={{ 
+        height: "80vh",
+        width: "100vw" , 
+        filter: theme === "dark" ? "brightness(1)" : "brightness(0.6)",}} >
         <ChangeMapView center={mapCenter} zoom={mapZoom} />
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" noWrap={true} />
+        <TileLayer
+          url={
+            theme === "dark"
+              ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          }
+        />
         <MapClickHandler />
 
         {trips.map((trip) =>

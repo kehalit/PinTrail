@@ -69,8 +69,10 @@ const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
   };
 
   return (
-    <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-      <div className="bg-white p-6 rounded-lg shadow-lg max-w-md w-full">
+    <div className="fixed top-0 left-0 w-full h-full backdrop-blur-sm bg-white/10 flex items-center justify-center z-[9999]">
+
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full text-black dark:text-white">
+
         <h2 className="text-lg font-bold mb-4">{editingTrip ? "Edit Trip" : "Add a New Trip"}</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -81,7 +83,7 @@ const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
               name="title"
               value={formData.title}
               onChange={handleChange}
-              className="w-full border p-2 rounded"
+              className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-black dark:text-white p-2 rounded"
               required
             />
           </div>
@@ -93,7 +95,7 @@ const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
               name="country"
               value={formData.country}
               onChange={handleChange}
-              className="w-full border p-2 rounded"
+              className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-black dark:text-white p-2 rounded"
               required
             />
           </div>
@@ -105,7 +107,7 @@ const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
               name="city"
               value={formData.city}
               onChange={handleChange}
-              className="w-full border p-2 rounded"
+              className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-black dark:text-white p-2 rounded"
               required
             />
           </div>
@@ -118,7 +120,7 @@ const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
                 name="start_date"
                 value={formData.start_date}
                 onChange={handleChange}
-                className="w-full border p-2 rounded"
+                className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-black dark:text-white p-2 rounded"
                 required
               />
             </div>
@@ -130,7 +132,7 @@ const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
                 name="end_date"
                 value={formData.end_date}
                 onChange={handleChange}
-                className="w-full border p-2 rounded"
+                className="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-black dark:text-white p-2 rounded"
                 required
               />
             </div>
@@ -175,7 +177,7 @@ const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
             <button
               onClick={closeForm}
               type="button"
-              className="px-4 py-2 bg-red-500 text-white rounded"
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
             >
               Cancel
             </button>

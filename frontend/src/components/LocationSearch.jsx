@@ -52,10 +52,10 @@ const LocationSearch = ({ setMapCenter, setSearchedLocation, setLocationName, se
   };
 
   return (
-    <div className="relative max-w-md mx-auto mt-4 z-50">
+    <div className="relative max-w-md mx-auto mt-4 z-50 dark:bg-gray-900 text-black dark:text-white">
       <input
         type="text"
-        className="w-full border rounded p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full border rounded p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-900 text-black dark:text-white"
         placeholder="Search for a location"
         value={searchQuery} 
         onChange={(e) => {
@@ -64,7 +64,7 @@ const LocationSearch = ({ setMapCenter, setSearchedLocation, setLocationName, se
       />
 
       {suggestions.length > 0 && (
-        <div className="absolute top-full left-0 right-0 bg-white border rounded shadow-lg max-h-60 overflow-y-auto mt-1 z-50">
+        <div className="absolute top-full left-0 right-0 bg-white border rounded shadow-lg max-h-60 overflow-y-auto mt-1 z-50 dark:bg-gray-900 text-black dark:text-white">
           {suggestions.map((suggestion) => (
             <div
               key={suggestion.id}
