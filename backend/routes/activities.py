@@ -73,7 +73,7 @@ def get_activities_by_trip_id(trip_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@activities_bp.route('/', methods=['POST'])
+@activities_bp.route('', methods=['POST'])
 def create_activity():
     """
     Create a new activity
