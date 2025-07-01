@@ -2,6 +2,12 @@ import React, { useState } from "react";
 import { toast } from "react-hot-toast";
 import { createActivity, updateActivity } from "../api/activities";
 
+const activityTypes = [
+  "Adventure", "Cultural", "Leisure", "Nature", "Wildlife",
+  "Sports", "Shopping", "Family", "Educational", "Nightlife", "Special Interest"
+];
+
+
 const ActivityForm = ({ location, closeForm, tripId, refreshActivities, existingActivity }) => {
 
   const [formData, setFormData] = useState({
@@ -9,8 +15,8 @@ const ActivityForm = ({ location, closeForm, tripId, refreshActivities, existing
     location: existingActivity ? existingActivity.location : "",
     type: existingActivity ? existingActivity.type : "",
     notes: existingActivity ? existingActivity.notes : "",
-    cost: existingActivity ? existingActivity.cost : "",
-    rating: existingActivity ? existingActivity.rating : "",
+    cost: existingActivity ? existingActivity.cost : null,
+    rating: existingActivity ? existingActivity.rating : null,
     lat: existingActivity ? existingActivity.lat : location?.lat,
     lng: existingActivity ? existingActivity.lng : location?.lng,
     trip_id: existingActivity ? existingActivity.tripId : tripId
@@ -24,7 +30,10 @@ const ActivityForm = ({ location, closeForm, tripId, refreshActivities, existing
     const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "cost" || name === "rating" ? Number(value) : value,
+      [name]: ["cost", "rating"].includes(name)
+        ? value === "" ? null : Number(value)
+        : value
+
     }));
   };
 
@@ -37,10 +46,10 @@ const ActivityForm = ({ location, closeForm, tripId, refreshActivities, existing
 
         await updateActivity(existingActivity.id, formData);
         toast.success("Activity updated successfully!");
-      } else  {
+      } else {
 
-      await createActivity(formData);
-      toast.success("Activity added successfully!");
+        await createActivity(formData);
+        toast.success("Activity added successfully!");
       }
       await refreshActivities();
       closeForm();
@@ -53,10 +62,10 @@ const ActivityForm = ({ location, closeForm, tripId, refreshActivities, existing
     }
   };
 
-  
+
 
   return (
-    <div className="fixed top-0 left-0 w-full h-full backdrop-blur-sm bg-gray-50 px-4 dark:bg-gray-900 text-black dark:text-white flex items-center justify-center z-[9999]
+    <div className="fixed top-0 left-0 w-full h-full backdrop-blur-sm bg-white/10 flex items-center justify-center z-[9999]
     ">
       <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg dark:bg-gray-800">
         <h2 className="text-lg font-bold mb-4">Add New Activity</h2>
@@ -90,15 +99,20 @@ const ActivityForm = ({ location, closeForm, tripId, refreshActivities, existing
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
-            <input
-              type="text"
+            <select
               name="type"
               value={formData.type}
               onChange={handleChange}
               className="w-full px-4 py-2 mt-1 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               required
-            />
+            >
+              <option value="">Select an activity type</option>
+              {activityTypes.map((type) => (
+                <option key={type} value={type}>{type}</option>
+              ))}
+            </select>
           </div>
+
 
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
@@ -129,7 +143,7 @@ const ActivityForm = ({ location, closeForm, tripId, refreshActivities, existing
                 type="number"
                 name="rating"
                 min="0"
-                max= "10"
+                max="10"
                 step="0.1"
                 value={formData.rating}
                 onChange={handleChange}

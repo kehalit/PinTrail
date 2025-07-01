@@ -47,7 +47,7 @@ export default function LandingPage() {
   };
 
   return (
-    <div className="relative flex flex-col z-10">
+    <div className="relative flex flex-col z-10 dark:bg-gray-900 text-black dark:text-white">
       {/* Map as full screen fixed background */}
       <MapContainer
         center={[40, -1]}

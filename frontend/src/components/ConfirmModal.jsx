@@ -10,7 +10,7 @@ const ConfirmModal = ({
   confirmButtonColor = "bg-red-500", 
 }) => {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+    <div className="fixed inset-0 bg-white/30 dark:bg-black/30 backdrop-blur-md flex items-center justify-center z-[9999]">
       <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm w-full">
         <h2 className="text-xl font-bold mb-4">{title}</h2>
         <p className="mb-6">{message}</p>
