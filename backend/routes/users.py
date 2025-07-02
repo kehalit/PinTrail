@@ -1,6 +1,86 @@
 from flask import Blueprint, request, jsonify, current_app
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
+
 
 users_bp = Blueprint('users', __name__, url_prefix='/users')
+
+@users_bp.route('/login', methods=['POST'])
+def login_user():
+    """
+    Log in a user
+    ---
+    tags:
+      - Users
+    parameters:
+      - in: body
+        name: body
+        required: true
+        schema:
+          id: Login
+          required:
+            - email
+            - password
+          properties:
+            email:
+              type: string
+              example: johndoe@example.com
+            password:
+              type: string
+              example: secret123
+    responses:
+      200:
+        description: Login successful
+      401:
+        description: Invalid credentials
+    """
+
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+
+        if not email or not password:
+            return jsonify({'error': 'Missing email or password'}), 400
+
+        db = current_app.config["db_manager"]
+        user = db.get_user_by_email(email)
+
+        if not user or not db.verify_password(user, password):
+            return jsonify({'error': 'Invalid email or password'}), 401
+
+        # access_token = create_access_token(identity={"id": user.id, "email": user.email})
+        access_token = create_access_token(identity=str(user.id))
+
+        return jsonify({
+            "message": "Login successful",
+            "access_token": access_token,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email
+                }
+        }), 200
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@users_bp.route('/protected', methods=['GET'])
+@jwt_required()
+def protected_route():
+    user_id = get_jwt_identity()
+    db = current_app.config['db_manager']
+    user = db.get_user_by_id(int(user_id))
+    if user:
+        return jsonify({
+            "message": "JWT is valid",
+            "user": {
+                "id": user.id,
+                "email": user.email,
+                "username": user.username
+            }
+        }), 200
+    return jsonify({"error": "User not found"}), 404
 
 @users_bp.route('/', methods=['POST', 'OPTIONS'])
 def add_user():
@@ -167,57 +247,3 @@ def delete_user(user_id):
     if db.delete_user(user_id):
         return jsonify({"message": "User deleted"})
     return jsonify({"error": "User not found"}), 404
-
-
-@users_bp.route('/login', methods=['POST'])
-def login_user():
-    """
-    Log in a user
-    ---
-    tags:
-      - Users
-    parameters:
-      - in: body
-        name: body
-        required: true
-        schema:
-          id: Login
-          required:
-            - email
-            - password
-          properties:
-            email:
-              type: string
-              example: johndoe@example.com
-            password:
-              type: string
-              example: secret123
-    responses:
-      200:
-        description: Login successful
-      401:
-        description: Invalid credentials
-    """
-    try:
-        data = request.get_json()
-        email = data.get('email')
-        password = data.get('password')
-
-        if not email or not password:
-            return jsonify({'error': 'Missing email or password'}), 400
-
-        db = current_app.config["db_manager"]
-        user = db.get_user_by_email(email)
-
-        if not user or not db.verify_password(user, password):
-            return jsonify({'error': 'Invalid email or password'}), 401
-
-        return jsonify({
-            "id": user.id,
-            "username": user.username,
-            "email": user.email
-        }), 200
-
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
