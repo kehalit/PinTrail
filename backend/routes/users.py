@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify, current_app
-from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity
+from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, create_refresh_token, \
+    get_jwt
 
 
 users_bp = Blueprint('users', __name__, url_prefix='/users')
@@ -50,10 +51,12 @@ def login_user():
 
         # access_token = create_access_token(identity={"id": user.id, "email": user.email})
         access_token = create_access_token(identity=str(user.id))
+        refresh_token = create_refresh_token(identity=(user.id))
 
         return jsonify({
             "message": "Login successful",
             "access_token": access_token,
+            "refresh_token": refresh_token,
             "user": {
                 "id": user.id,
                 "username": user.username,
@@ -81,6 +84,16 @@ def protected_route():
             }
         }), 200
     return jsonify({"error": "User not found"}), 404
+
+
+@users_bp.route('/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh():
+    identity = get_jwt_identity()
+    new_access_token = create_access_token(identity=identity)
+    return jsonify(access_token=new_access_token), 200
+
+
 
 @users_bp.route('/', methods=['POST', 'OPTIONS'])
 def add_user():

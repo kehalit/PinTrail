@@ -10,11 +10,12 @@ from routes.users import users_bp
 
 
 
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "super-secret-key"
 app.config['JWT_SECRET_KEY'] = "super-secret-jwt-key"
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=3600)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=7)
+
 
 # allow all origins
 CORS(app, supports_credentials=True)
@@ -72,6 +73,8 @@ def home():
 @app.before_request
 def log_request_info():
     print("Authorization header:", request.headers.get('Authorization'))
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

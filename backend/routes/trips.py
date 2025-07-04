@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from backend.utils.validates import validate_fields
 from datetime import datetime
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 trips_bp = Blueprint('trips', __name__, url_prefix='/trips')
 
@@ -195,6 +196,7 @@ def get_trip(trip_id):
 
 
 @trips_bp.route('/user/<int:user_id>', methods=['GET'])
+@jwt_required()
 def get_trips_by_user(user_id):
     """
     Get trips for a specific user
@@ -213,6 +215,11 @@ def get_trips_by_user(user_id):
         description: No trips found
     """
     try:
+        current_user_id = int(get_jwt_identity())
+
+        if current_user_id != user_id:
+            return jsonify({"error": "Unauthorized access"}), 403
+
         db = current_app.config["db_manager"]
         trips = db.get_trips_by_user_id(user_id)
         return jsonify([

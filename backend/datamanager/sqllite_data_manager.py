@@ -1,6 +1,6 @@
 import os
 from .data_manager_interface import DataManagerInterface
-from .data_models  import db, User, Trip, Activity, Photo
+from .data_models import db, User, Trip, Activity, Photo
 from pathlib import Path
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -196,3 +196,4 @@ class SQLiteDataManager(DataManagerInterface):
 
     def save_changes(self):
         db.session.commit()
+        
