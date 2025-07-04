@@ -1,3 +1,7 @@
+
+import api from '../utils/api';
+
+
 const BASE_URL = "http://127.0.0.1:5000/trips";
 
 // Fetch all trips
@@ -9,9 +13,11 @@ export async function fetchAllTrips() {
 
 // Fetch trips by user ID
 export async function fetchTripsByUserId(userId) {
-    const response = await fetch(`${BASE_URL}/user/${userId}`);
-    if (!response.ok) throw new Error("Failed to fetch trips for user");
-    return response.json();
+   
+    const response = await api.get(`/trips/user/${userId}`);
+    
+    if (!response.status === 200) throw new Error("Failed to fetch trips for user");
+    return response.data;
 }
 
 // Fetch a single trip by ID
