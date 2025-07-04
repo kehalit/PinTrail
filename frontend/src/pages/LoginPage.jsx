@@ -1,6 +1,7 @@
-import React, { useState, useContext , useEffect} from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
+import api from '../utils/api';
 
 const LoginPage = () => {
   const { login, user } = useContext(AuthContext);
@@ -18,32 +19,23 @@ const LoginPage = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setErrorMsg(''); // Clear any previous error
-
     try {
-      const res = await fetch('http://127.0.0.1:5000/users/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setErrorMsg(data.error || 'Login failed. Please check your credentials.');
-        return;
-      }
-
-      login(data); // ✅ update global context
+      const response = await api.post('/users/login', { email, password });
+      const { access_token, user } = response.data;
+      localStorage.setItem('access_token', access_token);
+      //console.log('User received from backend:', response.data.user);
+      login(user);
       navigate('/dashboard');
-    
-    } catch (err) {
-      console.error('Login error:', err);
-      setErrorMsg('An error occurred. Please try again');
+      setErrorMsg('')
     }
-  };
+    catch (err) {
+      console.error('Login error:', err); 
+      console.log('Full error response:', err.response); 
+      setErrorMsg(err.response?.data?.message || 'Login Failed');
+    }
+    
+
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50 px-4 dark:bg-gray-900 text-black dark:text-white">
@@ -97,6 +89,6 @@ const LoginPage = () => {
       </form>
     </div>
   );
-};
+}
 
 export default LoginPage;
