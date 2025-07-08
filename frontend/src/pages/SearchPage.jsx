@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { debounce } from "lodash";
 import { fetchAllTrips } from "../api/trips";
 import { useNavigate } from "react-router-dom";
+import api from '../utils/api';
 
 
 const UNSPLASH_BASE_URL = "https://api.unsplash.com/search/photos";
@@ -32,7 +33,17 @@ const SearchPage = () => {
         publicTrips.map(async (trip) => {
           const searchQuery = trip.city || trip.country || trip.title || "travel";
           const imageUrl = await fetchUnsplashImage(searchQuery);
-          return { ...trip, image_url: imageUrl };
+
+          let username = "Unknown";
+        try {
+          const response = await api.get(`/users/${trip.user_id}`);
+          if (response.status === 200) {
+            username = response.data.username;
+          }
+        } catch (err) {
+          console.error(`Failed to fetch user for trip ${trip.id}`, err);
+        }
+          return { ...trip, image_url: imageUrl , username,};
         })
       );
 
@@ -72,6 +83,7 @@ const SearchPage = () => {
     }, 500),
     []
   );
+
 
   return (
     <div className="pt-28 px-4 min-h-screen bg-gray-50 dark:bg-gray-900 text-black dark:text-white">
@@ -124,6 +136,7 @@ const SearchPage = () => {
                   <p className="text-gray-600 text-sm dark:bg-gray-900 text-black dark:text-white">
                     <strong>{trip.start_date}</strong> → <strong>{trip.end_date}</strong>
                   </p>
+                  <p className="text-gray-500 text-sm mb-3 dark:bg-gray-900 text-black dark:text-white">Shared by: {trip.username}</p>
                 </div>
               </motion.div>
 
