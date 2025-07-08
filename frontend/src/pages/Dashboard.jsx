@@ -19,7 +19,7 @@ const Dashboard = () => {
 
 
   return (
-    <div className="pt-30 dark:bg-gray-900 text-black dark:text-white">
+    <div className="pt-28 px-4 min-h-screen bg-gray-50 dark:bg-gray-900 text-black dark:text-white">
 
       {/* Location Search Input */}
       <div className="relative z-[1000] max-w-md mx-auto mt-4">
