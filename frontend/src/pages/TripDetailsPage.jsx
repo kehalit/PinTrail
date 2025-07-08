@@ -9,8 +9,8 @@ import MapController from "../components/MapController";
 import ActivityForm from "../components/ActivityForm";
 import { toast } from "react-hot-toast";
 import ConfirmModal from "../components/ConfirmModal";
-import { ThemeContext } from "../context/ThemeContext"
-
+import { ThemeContext } from "../context/ThemeContext";
+import { AuthContext } from "../context/AuthContext";
 
 const TripDetailsPage = () => {
   const { tripId } = useParams();
@@ -28,15 +28,16 @@ const TripDetailsPage = () => {
   const [loadingActivities, setLoadingActivities] = useState(false);
   const [selectedActivityId, setSelectedActivityId] = useState(null);
   const [editingActivity, setEditingActivity] = useState(null);
-
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [activityToDelete, setActivityToDelete] = useState(null);
   const [selectedActivity, setSelectedActivity] = useState(null);
-  const {theme} = useContext(ThemeContext)
-
+  const { theme } = useContext(ThemeContext);
+  const { user } = useContext(AuthContext);
 
   const activityRefs = useRef({});
   const markerRefs = useRef({});
+
+  const isOwner = user?.id === trip?.user_id;
 
   useEffect(() => {
     if (selectedActivityId) {
@@ -44,7 +45,6 @@ const TripDetailsPage = () => {
       return () => clearTimeout(timer);
     }
   }, [selectedActivityId]);
-
 
   const refreshActivities = async () => {
     try {
@@ -54,19 +54,6 @@ const TripDetailsPage = () => {
       console.error("Error refreshing activities:", error);
     }
   };
-
-  const fetchActivities = async () => {
-    try {
-      setLoadingActivities(true);
-      const activitiesData = await getActivitiesForTrip(tripId);
-      setActivities(activitiesData);
-    } catch (error) {
-      console.error("Error fetching activities:", error);
-    } finally {
-      setLoadingActivities(false);
-    }
-  };
-
 
   useEffect(() => {
     async function fetchTripDetails() {
@@ -78,13 +65,9 @@ const TripDetailsPage = () => {
         setTrip(tripData);
         setActivities(activitiesData);
 
-        // Set initial map center
-        const firstActivityWithCoordinates = activitiesData.find(
-          (act) => act.lat && act.lng
-        );
-
-        if (firstActivityWithCoordinates) {
-          setMapCenter([firstActivityWithCoordinates.lat, firstActivityWithCoordinates.lng]);
+        const firstActivity = activitiesData.find((act) => act.lat && act.lng);
+        if (firstActivity) {
+          setMapCenter([firstActivity.lat, firstActivity.lng]);
         } else if (tripData.lat && tripData.lng) {
           setMapCenter([tripData.lat, tripData.lng]);
         }
@@ -107,6 +90,8 @@ const TripDetailsPage = () => {
   const MapClickHandler = () => {
     useMapEvents({
       click(e) {
+        if (!isOwner) return; 
+  
         const newLocation = { lat: e.latlng.lat, lng: e.latlng.lng, name: "Custom Location" };
         setActivityLocation(newLocation);
         setShowActivityForm(true);
@@ -114,28 +99,21 @@ const TripDetailsPage = () => {
     });
     return null;
   };
+  
 
   const handleActivitySelect = (activityId) => {
     setSelectedActivityId(activityId);
-  
-    // Set selected activity for map centering
     const activity = activities.find((act) => act.id === activityId);
     setSelectedActivity(activity);
-  
+
     const marker = markerRefs.current[activityId];
-    if (marker) {
-      marker.openPopup(); 
-    }
-  
+    if (marker) marker.openPopup();
+
     const activityElement = activityRefs.current[activityId];
     if (activityElement) {
-      activityElement.scrollIntoView({
-        behavior: "smooth",
-        block: "center",
-      });
+      activityElement.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   };
-  
 
   const handleDeleteConfirmed = async () => {
     try {
@@ -151,26 +129,17 @@ const TripDetailsPage = () => {
 
   const ChangeMapView = ({ activity }) => {
     const map = useMap();
-
     useEffect(() => {
-      if (activity) {
-        map.setView([activity.lat, activity.lng], 15);
-      }
+      if (activity) map.setView([activity.lat, activity.lng], 15);
     }, [activity, map]);
-
     return null;
   };
 
-
   return (
     <div className="max-w-6xl mx-auto p-8 flex flex-col md:flex-row gap-6 bg-white dark:bg-gray-900 text-black dark:text-white">
-
-
-      {/* Left: Trip Details + Activities */}
       <div className="md:w-1/3 dark:bg-gray-900 text-black bg-white dark:text-white rounded-lg shadow-md p-20 overflow-y-auto max-h-[80vh]">
-        <h1 className="text-2xl font-bold mb-4 ">{city}, {country}</h1>
+        <h1 className="text-2xl font-bold mb-4">{city}, {country}</h1>
         <p className="mb-4 text-gray-700 dark:text-gray-300">{description}</p>
-
         <h2 className="text-xl font-semibold mb-2">Activities</h2>
         {activities.length === 0 ? (
           <p className="text-gray-500">No activities found for this trip.</p>
@@ -180,11 +149,7 @@ const TripDetailsPage = () => {
               <li
                 key={activity.id}
                 ref={(el) => (activityRefs.current[activity.id] = el)}
-                className={`border border-gray-200 dark:border-gray-700 rounded p-3 transition-colors duration-500 ${
-                  selectedActivityId === activity.id
-                    ? "bg-blue-200 dark:bg-blue-800"
-                    : "bg-white dark:bg-gray-800"
-                  }`}
+                className={`border rounded p-3 transition-colors duration-500 ${selectedActivityId === activity.id ? "bg-blue-200 dark:bg-blue-800" : "bg-white dark:bg-gray-800"}`}
               >
                 <h3
                   className="font-semibold cursor-pointer text-blue-600 hover:underline"
@@ -192,22 +157,18 @@ const TripDetailsPage = () => {
                 >
                   {activity.name}
                 </h3>
-
                 <p className="text-sm text-gray-600 dark:text-gray-300">{activity.location}</p>
                 <p className="text-sm text-gray-600 dark:text-gray-300">{activity.type}</p>
-                {activity.notes && <p className="text-sm text-gray-500 italic dark:text-gray-300">Notes: {activity.notes}</p>}
+                {activity.notes && <p className="text-sm italic text-gray-500 dark:text-gray-300">Notes: {activity.notes}</p>}
                 {activity.cost !== undefined && <p className="text-sm text-gray-600 dark:text-gray-300">Cost: ${activity.cost}</p>}
                 {activity.rating !== undefined && <p className="text-sm text-yellow-500 dark:text-gray-300">Rating: {activity.rating}</p>}
               </li>
-
             ))}
           </ul>
         )}
       </div>
 
-      {/* Right: Map */}
       <div className="md:w-2/3 h-[80vh] rounded-lg overflow-hidden shadow-md relative">
-        {/* Location Search on top of map */}
         <div className="absolute top-4 left-4 right-4 z-[1000]">
           <LocationSearch
             setMapCenter={setMapCenter}
@@ -218,7 +179,8 @@ const TripDetailsPage = () => {
             setSearchQuery={setSearchQuery}
           />
         </div>
-        {searchedLocation && (
+
+        {searchedLocation && isOwner && (
           <div className="absolute top-24 left-1/2 transform -translate-x-1/2 z-50">
             <button
               onClick={() => setShowActivityForm(true)}
@@ -229,26 +191,13 @@ const TripDetailsPage = () => {
           </div>
         )}
 
-
-        {activities.length === 0 && (
-          <div className="p-4 text-center text-gray-500">No activity locations to display on map.</div>
-        )}
-
-        <MapContainer center={mapCenter} zoom={mapZoom} style={{ height: "80vh", width: "100%" }} >
+        <MapContainer center={mapCenter} zoom={mapZoom} style={{ height: "80vh", width: "100%" }}>
           <MapController center={mapCenter} zoom={mapZoom} />
           <TileLayer
-                    url={
-                      theme === "dark"
-                        ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                        : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    }
-                    attribution={
-                      theme === "dark"
-                        ? '&copy; <a href="https://carto.com/">CARTO</a>'
-                        : '&copy; OpenStreetMap contributors'
-                    }
-                    noWrap={true}
-                  />
+            url={theme === "dark" ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png" : "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"}
+            attribution={theme === "dark" ? '&copy; <a href="https://carto.com/">CARTO</a>' : '&copy; OpenStreetMap contributors'}
+            noWrap={true}
+          />
           <MapClickHandler />
           <ChangeMapView activity={selectedActivity} />
 
@@ -257,46 +206,21 @@ const TripDetailsPage = () => {
               <Marker
                 key={act.id}
                 position={[act.lat, act.lng]}
-                ref={(ref) => {
-                  if (ref) {
-                    markerRefs.current[act.id] = ref;
-                  }
-                }}
+                ref={(ref) => { if (ref) markerRefs.current[act.id] = ref; }}
               >
                 <Popup>
                   <div className="text-center">
-                    <h3
-                      className="font-bold text-blue-600 cursor-pointer hover:underline"
-                      onClick={() => handleActivitySelect(act.id)}
-                    >
-                      {act.name}
-                    </h3>
+                    <h3 className="font-bold text-blue-600 cursor-pointer hover:underline" onClick={() => handleActivitySelect(act.id)}>{act.name}</h3>
                     <p>{act.location}, {act.type}</p>
                     <p>Rating: {act.rating}</p>
-
-                    <div className="flex justify-center space-x-2 mt-2">
-                      <button
-                        onClick={() => setEditingActivity(act)}
-                        className="mt-2 px-3 py-2 bg-yellow-500 text-white rounded"
-                      >
-                        Edit
-                      </button>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setActivityToDelete(act.id);
-                          setShowConfirmModal(true);
-                        }}
-                        className="mt-2 px-3 py-2 bg-red-500 text-white rounded"
-                      >
-                        Delete
-                      </button>
-
-                    </div>
+                    {isOwner && (
+                      <div className="flex justify-center space-x-2 mt-2">
+                        <button onClick={() => setEditingActivity(act)} className="px-3 py-2 bg-yellow-500 text-white rounded">Edit</button>
+                        <button onClick={(e) => { e.stopPropagation(); setActivityToDelete(act.id); setShowConfirmModal(true); }} className="px-3 py-2 bg-red-500 text-white rounded">Delete</button>
+                      </div>
+                    )}
                   </div>
                 </Popup>
-
               </Marker>
             ) : null
           )}
@@ -305,24 +229,23 @@ const TripDetailsPage = () => {
             <Marker position={[searchedLocation.lat, searchedLocation.lng]}>
               <Popup>
                 <div>{locationName || "Selected Location"}</div>
-                <button
-                  onClick={() => {
-                    setActivityLocation({ lat: searchedLocation.lat, lng: searchedLocation.lng });
-                    setShowActivityForm(true);
-                  }}
-                  className="mt-2 px-4 py-2 bg-green-500 text-white rounded"
-                >
-                  add Activity
-                </button>
-
+                {isOwner && (
+                  <button
+                    onClick={() => {
+                      setActivityLocation({ lat: searchedLocation.lat, lng: searchedLocation.lng });
+                      setShowActivityForm(true);
+                    }}
+                    className="mt-2 px-4 py-2 bg-green-500 text-white rounded"
+                  >
+                    Add Activity
+                  </button>
+                )}
               </Popup>
             </Marker>
           )}
-
         </MapContainer>
-
       </div>
-      {/* Activity Form Modal */}
+
       {(showActivityForm || editingActivity) && (
         <ActivityForm
           location={activityLocation || (editingActivity && { lat: editingActivity.lat, lng: editingActivity.lng })}
@@ -344,7 +267,6 @@ const TripDetailsPage = () => {
           onCancel={() => setShowConfirmModal(false)}
         />
       )}
-
     </div>
   );
 };
