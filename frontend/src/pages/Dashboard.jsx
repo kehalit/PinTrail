@@ -22,7 +22,7 @@ const Dashboard = () => {
     <div className="pt-28 px-4 min-h-screen bg-gray-50 dark:bg-gray-900 text-black dark:text-white">
 
       {/* Location Search Input */}
-      <div className="relative z-[1000] max-w-md mx-auto mt-4">
+      <div className=" z-[1000] max-w-md mx-auto mt-4">
         <LocationSearch
           setMapCenter={setMapCenter}
           setSearchedLocation={setSelectedLocation}

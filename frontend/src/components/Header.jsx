@@ -91,7 +91,7 @@ const Header = ({ popupOpen }) => {
                         </Link>
                     </>
                 ) : (
-                    <div className="relative" ref={dropdownRef}>
+                    <div className="" ref={dropdownRef}>
                         <button
                             onClick={toggleDropdown}
                             className="flex items-center gap-2 px-3 py-2 bg-gray-200 dark:bg-gray-700 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600"
@@ -104,7 +104,7 @@ const Header = ({ popupOpen }) => {
 
 
                         {dropdownOpen && (
-                            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-sm font-medium text-gray-900 dark:text-gray-100">
+                            <div className="fixed right-0 mt-2 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 text-sm font-medium text-gray-900 dark:text-gray-100">
                                 <Link
                                     to="/dashboard"
                                     onClick={() => setDropdownOpen(false)}
@@ -143,7 +143,7 @@ const Header = ({ popupOpen }) => {
 
             {/* Mobile Dropdown */}
             {menuOpen && (
-                <div className="md:hidden absolute right-4 top-20 w-44 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg py-2 z-[999]">
+                <div className="md:hidden fixed right-4 top-20 w-44 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg py-2 z-[999]">
                     {!user ? (
                         <>
                             <Link

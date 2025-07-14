@@ -52,7 +52,7 @@ const LocationSearch = ({ setMapCenter, setSearchedLocation, setLocationName, se
   };
 
   return (
-    <div className="relative max-w-md mx-auto mt-2 mb-2 z-50 dark:bg-gray-900 text-black dark:text-white">
+    <div className="relative max-w-md mx-auto mt-2 mb-6 z-50 dark:bg-gray-900 text-black dark:text-white">
 
       <input
         type="text"
