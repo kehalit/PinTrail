@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, create_refresh_token, \
     get_jwt
-
+from sqlalchemy.testing.suite.test_reflection import users
 
 users_bp = Blueprint('users', __name__, url_prefix='/users')
 
@@ -66,6 +66,15 @@ def login_user():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+@users_bp.route('/logout', methods= ['POST'])
+@jwt_required()
+def logout():
+    jti = get_jwt()['jti']
+    db = current_app.config["db_manager"]
+    db.blacklist_token(jti)
+    return  jsonify({"message": "Succesfully logged out"}), 200
 
 
 @users_bp.route('/protected', methods=['GET'])
