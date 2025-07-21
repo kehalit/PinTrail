@@ -1,3 +1,6 @@
+from datetime import datetime
+
+
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
@@ -100,3 +103,11 @@ class Photo(db.Model):
             "url": self.url,
             "caption": self.caption
         }
+
+
+class TokenBlackList(db.Model):
+    __tablename__ = "token_blacklist"
+
+    id = db.Column(db.Integer, primary_key=True)
+    jti = db.Column(db.String(120), nullable=False, unique=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)

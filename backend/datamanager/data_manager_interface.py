@@ -67,3 +67,11 @@ class DataManagerInterface(ABC):
     @abstractmethod
     def delete_activity(self, activity_id):
         pass
+
+    @abstractmethod
+    def is_token_blacklisted(self, jti):
+        pass
+
+    @abstractmethod
+    def blacklist_token(self, jti):
+        pass

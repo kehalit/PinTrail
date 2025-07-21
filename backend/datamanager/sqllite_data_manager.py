@@ -1,6 +1,6 @@
 import os
 from .data_manager_interface import DataManagerInterface
-from .data_models import db, User, Trip, Activity, Photo
+from .data_models import db, User, Trip, Activity, Photo, TokenBlackList
 from pathlib import Path
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -196,4 +196,11 @@ class SQLiteDataManager(DataManagerInterface):
 
     def save_changes(self):
         db.session.commit()
-        
+
+    def is_token_blacklisted(self, jti):
+        return TokenBlackList.query.filter_by(jti=jti).first() is not None
+
+    def blacklist_token(self, jti):
+        token = TokenBlackList(jti=jti)
+        db.session.add(token)
+        db.session.commit()
