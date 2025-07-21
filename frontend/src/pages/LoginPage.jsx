@@ -22,9 +22,9 @@ const LoginPage = () => {
     try {
       const response = await api.post('/users/login', { email, password });
       const { access_token, user } = response.data;
-      localStorage.setItem('access_token', access_token);
+      //localStorage.setItem('access_token', access_token);
       //console.log('User received from backend:', response.data.user);
-      login(user);
+      login(user, access_token);
       navigate('/dashboard');
       setErrorMsg('')
     }
