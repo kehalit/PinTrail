@@ -44,6 +44,11 @@ app.register_blueprint(users_bp)
 def custom_unauthorized_response(callback):
     return jsonify({"error": "Missing or invalid token"}), 401
 
+@jwt.token_in_blocklist_loader
+def check_if_token_revoked(jwt_header, jwt_payload):
+    jti = jwt_payload['jti']
+    return db_manager.is_token_blacklisted(jti)
+
 @jwt.invalid_token_loader
 def custom_invalid_token_response(callback):
     print(f"Invalid token received: {request.headers.get('Authorization')}")
