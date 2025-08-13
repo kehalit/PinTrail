@@ -69,6 +69,34 @@ class DataManagerInterface(ABC):
         pass
 
     @abstractmethod
+    def get_photos(self):
+        pass
+
+    @abstractmethod
+    def get_photo_by_id(self, photo_id):
+        pass
+
+    @abstractmethod
+    def get_photos_by_trip_id(self, trip_id):
+        pass
+
+    @abstractmethod
+    def add_photo(self, photo_data):
+        pass
+
+    @abstractmethod
+    def update_photo(self, photo_id, updates):
+        pass
+
+    @abstractmethod
+    def delete_photo(self, photo_id):
+        pass
+
+    @abstractmethod
+    def insert_photo(self, trip_id, caption, url):
+        pass
+
+    @abstractmethod
     def is_token_blacklisted(self, jti):
         pass
 

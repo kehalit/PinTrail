@@ -1,4 +1,5 @@
 import os
+import sqlite3
 from .data_manager_interface import DataManagerInterface
 from .data_models import db, User, Trip, Activity, Photo, TokenBlackList
 from pathlib import Path
@@ -19,6 +20,16 @@ class SQLiteDataManager(DataManagerInterface):
 
         with app.app_context():
             db.create_all()
+
+    def get_connection(self):
+        """Return a SQLite connection to the configured DB path."""
+        conn = sqlite3.connect(self.db_path)
+        conn.row_factory = sqlite3.Row  # allows dict-like access
+        return conn
+
+    def close_connection(self, exception=None):
+        # Optionally close connections if you're storing them in `g` or caching
+        pass
 
     def get_trips(self):
         return Trip.query.all()
@@ -196,6 +207,72 @@ class SQLiteDataManager(DataManagerInterface):
 
     def save_changes(self):
         db.session.commit()
+
+    def get_photos(self):
+        try:
+            photos = Photo.query.all()
+            return [photo.to_dict() for photo in photos]
+        except Exception as e:
+            print(f"Error fetching photos: {e}")
+            return []
+
+    def get_photo_by_id(self, photo_id):
+        return Photo.query.get(photo_id)
+
+    def get_photos_by_trip_id(self, trip_id):
+        try:
+            photos = Photo.query.filter_by(trip_id=trip_id).all()
+            return [photo.to_dict() for photo in photos]
+        except Exception as e:
+            print(f"Error fetching photos for trip {trip_id}: {e}")
+            return []
+
+    def add_photo(self, photo_data):
+        try:
+            new_photo = Photo(
+                trip_id=photo_data["trip_id"],
+                url=photo_data.get("url"),
+                caption=photo_data.get("caption")
+            )
+            db.session.add(new_photo)
+            db.session.commit()
+            return new_photo
+        except Exception as e:
+            db.session.rollback()
+            raise e
+
+    def update_photo(self, photo_id, updates):
+        photo = Photo.query.get(photo_id)
+        if not photo:
+            return None
+        for key, value in updates.items():
+            setattr(photo, key, value)
+        db.session.commit()
+        return photo
+
+    def delete_photo(self, photo_id):
+        photo = Photo.query.get(photo_id)
+        if not photo:
+            return False
+        db.session.delete(photo)
+        db.session.commit()
+        return True
+
+    def insert_photo(self, trip_id, caption, url):
+        trip_id, caption, url
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("""
+            INSERT INTO photos (trip_id, caption, url)
+            VALUES (?, ?, ?)
+        """, (trip_id, caption, url))
+
+        conn.commit()
+        photo_id = cursor.lastrowid
+        conn.close()
+
+        return photo_id
 
     def is_token_blacklisted(self, jti):
         return TokenBlackList.query.filter_by(jti=jti).first() is not None
