@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import JWTManager, jwt_required, create_access_token, get_jwt_identity, create_refresh_token, \
     get_jwt
-from sqlalchemy.testing.suite.test_reflection import users
+
 
 users_bp = Blueprint('users', __name__, url_prefix='/users')
 
@@ -60,7 +60,8 @@ def login_user():
             "user": {
                 "id": user.id,
                 "username": user.username,
-                "email": user.email
+                "email": user.email,
+                "created_at": user.created_at.isoformat() if user.created_at else None,
                 }
         }), 200
 
@@ -145,16 +146,18 @@ def add_user():
         username = data.get('username')
         email = data.get('email')
         password = data.get('password')
+        created_at = data.get('created_at')
 
         if not username or not email or not password:
             return jsonify({'error': 'Missing required fields'}), 400
         db = current_app.config["db_manager"]
-        new_user = db.add_user(username, email, password)
+        new_user = db.add_user(username, email, password, created_at)
 
         return jsonify({
             'id': new_user.id,
             'username': new_user.username,
-            'email': new_user.email
+            'email': new_user.email,
+            "created_at": new_user.created_at.isoformat() if new_user.created_at else None,
         }), 201
 
     except Exception as e:
@@ -174,7 +177,7 @@ def get_users():
     db = current_app.config["db_manager"]
     users = db.get_all_users()
     return jsonify([
-        { "id": user.id, "username": user.username, "email": user.email}
+        { "id": user.id, "username": user.username, "email": user.email, "created_at": user.created_at}
         for user in users
     ])
 
