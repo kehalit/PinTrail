@@ -83,23 +83,3 @@ class DataManagerInterface(ABC):
     @abstractmethod
     def add_photo(self, photo_data):
         pass
-
-    @abstractmethod
-    def update_photo(self, photo_id, updates):
-        pass
-
-    @abstractmethod
-    def delete_photo(self, photo_id):
-        pass
-
-    @abstractmethod
-    def insert_photo(self, trip_id, caption, url):
-        pass
-
-    @abstractmethod
-    def is_token_blacklisted(self, jti):
-        pass
-
-    @abstractmethod
-    def blacklist_token(self, jti):
-        pass

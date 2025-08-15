@@ -1,10 +1,14 @@
 import os
 import sqlite3
+import uuid
+
 from .data_manager_interface import DataManagerInterface
 from .data_models import db, User, Trip, Activity, Photo, TokenBlackList
 from pathlib import Path
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+from supabase import Client, StorageException
 
 # Database configuration
 basedir = Path(__file__).resolve().parent.parent
@@ -16,6 +20,8 @@ class SQLiteDataManager(DataManagerInterface):
         """Initialize the data manager with Flask app and configure the database."""
         app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{database_path}'
         app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        self.supabase: Client = app.config['supabase']
+        self.bucket_name = app.config['SUPABASE_BUCKET_NAME']
         db.init_app(app)
 
         with app.app_context():
@@ -227,53 +233,6 @@ class SQLiteDataManager(DataManagerInterface):
             print(f"Error fetching photos for trip {trip_id}: {e}")
             return []
 
-    def add_photo(self, photo_data):
-        try:
-            new_photo = Photo(
-                trip_id=photo_data["trip_id"],
-                url=photo_data.get("url"),
-                caption=photo_data.get("caption")
-            )
-            db.session.add(new_photo)
-            db.session.commit()
-            return new_photo
-        except Exception as e:
-            db.session.rollback()
-            raise e
-
-    def update_photo(self, photo_id, updates):
-        photo = Photo.query.get(photo_id)
-        if not photo:
-            return None
-        for key, value in updates.items():
-            setattr(photo, key, value)
-        db.session.commit()
-        return photo
-
-    def delete_photo(self, photo_id):
-        photo = Photo.query.get(photo_id)
-        if not photo:
-            return False
-        db.session.delete(photo)
-        db.session.commit()
-        return True
-
-    def insert_photo(self, trip_id, caption, url):
-        trip_id, caption, url
-        conn = self.get_connection()
-        cursor = conn.cursor()
-
-        cursor.execute("""
-            INSERT INTO photos (trip_id, caption, url)
-            VALUES (?, ?, ?)
-        """, (trip_id, caption, url))
-
-        conn.commit()
-        photo_id = cursor.lastrowid
-        conn.close()
-
-        return photo_id
-
     def is_token_blacklisted(self, jti):
         return TokenBlackList.query.filter_by(jti=jti).first() is not None
 
@@ -281,3 +240,35 @@ class SQLiteDataManager(DataManagerInterface):
         token = TokenBlackList(jti=jti)
         db.session.add(token)
         db.session.commit()
+
+    def add_photo(self, photo_data):
+        """Add a photo to supabase storage and store the metadata in the db"""
+        try:
+            file = photo_data.get("file")
+            trip_id = photo_data["trip_id"]
+            caption = photo_data.get("caption", "")
+            filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
+            file_path = f"photos/{trip_id}/{filename}"
+
+            file_content = file.read()
+            # Upload file
+            self.supabase.storage.from_(self.bucket_name).upload(file_path, file_content, file_options={"content-type": file.mimetype})
+
+            # Get url
+            url = self.supabase.storage.from_(self.bucket_name).get_public_url(file_path)
+
+            # Store the metadata in sQLite
+            new_photo = Photo(
+                trip_id=trip_id,
+                url=url,
+                caption=caption
+            )
+            db.session.add(new_photo)
+            db.session.commit()
+            return new_photo
+        except StorageException as e:
+            db.session.rollback()
+            raise e
+        except Exception as e:
+            db.session.rollback()
+            raise e

@@ -1,3 +1,4 @@
+import os
 from flask import Flask, jsonify, request
 from flask_jwt_extended import JWTManager
 from flasgger import Swagger
@@ -7,7 +8,25 @@ from datamanager.sqllite_data_manager import SQLiteDataManager
 from routes.activities import activities_bp
 from routes.trips import trips_bp
 from routes.users import users_bp
+from routes.photos import photos_bp
+from dotenv import load_dotenv
+from routes.chat import chat_bp
+from supabase import create_client, Client
 
+
+
+load_dotenv()
+
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+SUPABASE_BUCKET_NAME = os.getenv("SUPABASE_BUCKET_NAME")
+
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise Exception("SUPABASE_URL or SUPABASE_KEY is not set in environment variables.")
+
+supabase_client: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+from flask import send_from_directory
 
 
 app = Flask(__name__)
@@ -16,10 +35,13 @@ app.config['JWT_SECRET_KEY'] = "super-secret-jwt-key"
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=3600)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=7)
 
+app.config["SUPABASE_URL"] = SUPABASE_URL
+app.config["supabase"] = supabase_client
+app.config["SUPABASE_BUCKET_NAME"] = SUPABASE_BUCKET_NAME
+
 
 # allow all origins
 CORS(app, supports_credentials=True)
-
 
 
 jwt = JWTManager(app)
@@ -38,6 +60,12 @@ app.config["db_manager"] = db_manager
 app.register_blueprint(activities_bp)
 app.register_blueprint(trips_bp)
 app.register_blueprint(users_bp)
+app.register_blueprint(photos_bp)
+app.register_blueprint(chat_bp)
+
+@app.route('/uploads/<path:filename>')
+def serve_uploaded_file(filename):
+    return send_from_directory('uploads', filename)
 
 
 @jwt.unauthorized_loader
