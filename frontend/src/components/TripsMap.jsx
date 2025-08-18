@@ -6,6 +6,7 @@ import { fetchTripsByUserId, deleteTrip } from "../api/trips";
 import { useNavigate } from "react-router-dom";
 import ConfirmModal from "../components/ConfirmModal";
 import { ThemeContext } from "../context/ThemeContext";
+import { getUserPhotos } from "../api/photos";
 
 
 
@@ -31,20 +32,30 @@ const TripsMap = ({
   const { theme } = useContext(ThemeContext);
 
   const navigate = useNavigate();
+
   useEffect(() => {
     if (!user) return;
 
-    const loadTrips = async () => {
+    const loadTripsWithPhotos = async () => {
       try {
-        const data = await fetchTripsByUserId(user.id);
-        setTrips(data);
+        const tripsData = await fetchTripsByUserId(user.id);
+
+        const tripsWithPhotos = await Promise.all(
+          tripsData.map(async (trip) => {
+            const photos = await getUserPhotos(trip.id);
+            return { ...trip, photos }; // attach photos to each trip
+          })
+        );
+
+        console.log("Trips with photos:", tripsWithPhotos);
+        setTrips(tripsWithPhotos);
       } catch (error) {
-        console.error("Error fetching trips:", error);
+        console.error("Error fetching trips or photos:", error);
         toast.error("Failed to fetch trips.");
       }
     };
 
-    loadTrips();
+    loadTripsWithPhotos();
   }, [user, refreshTrips]);
 
   const MapClickHandler = () => {
@@ -88,10 +99,11 @@ const TripsMap = ({
 
   return (
     <div>
-      <MapContainer center={[40, -1]} zoom={3} style={{ 
+      <MapContainer center={[40, -1]} zoom={3} style={{
         height: "80vh",
-        width: "100vw" , 
-        filter: theme === "dark" ? "brightness(1)" : "brightness(0.6)",}} >
+        width: "100vw",
+        filter: theme === "dark" ? "brightness(1)" : "brightness(0.6)",
+      }} >
         <ChangeMapView center={mapCenter} zoom={mapZoom} />
         <TileLayer
           url={
@@ -117,6 +129,27 @@ const TripsMap = ({
                   <p>{trip.description}</p>
                   <p><strong>Start:</strong> {trip.start_date} | <strong>End:</strong> {trip.end_date}</p>
 
+                  {/* Photos */}
+                  {trip.photos && trip.photos.length > 0 && (
+                    <div className="flex flex-wrap justify-center mt-2 gap-2">
+                      {trip.photos.map(photo => (
+                        <img
+                          key={photo.id}
+                          src={photo.url}
+                          alt={photo.caption || "Trip photo"}
+                          className="w-16 h-16 object-cover rounded shadow-sm"
+                        />
+                      ))}
+                      {trip.photos.length > 2 && (
+                        <button
+                          onClick={() => navigate(`/trips/${trip.id}/album`)}
+                          className="px-2 py-1 bg-blue-500 text-white rounded text-sm mt-1"
+                        >
+                          +{trip.photos.length - 2} more
+                        </button>
+                      )}
+                    </div>
+                  )}
                   <div className="flex justify-center space-x-2 mt-2">
                     <button
                       onClick={() => handleEdit(trip)}
