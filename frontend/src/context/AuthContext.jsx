@@ -8,11 +8,19 @@ export const AuthProvider = ({ children }) => {
 
   // Load user from localStorage on first load
   useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      localStorage.removeItem("user");
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      setUser(null);
+    } else {  
     const stored = localStorage.getItem("user");
     if (stored) {
       setUser(JSON.parse(stored));
     }
+    }
   }, []);
+
 
   const login = (userData, access_token) => {
   setUser(userData);

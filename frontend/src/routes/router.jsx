@@ -7,7 +7,7 @@ import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import Dashboard from "../pages/Dashboard";
 import NotFound from "../pages/NotFound";
-import PrivateRoute from "../components/PrivateRoute";
+import PrivateRoute from "./PrivateRoute";
 import SearchPage from "../pages/SearchPage";
 import TripDetailsPage from "../pages/TripDetailsPage";
 import Profile from '../pages/Profile';
@@ -21,7 +21,7 @@ const Router = () => {
       <Route path="/search" element={<SearchPage />} />
       <Route path="/trips/:tripId" element={<TripDetailsPage/>}/>
       <Route path="/users/:id" element={<Profile />} />
-
+    
       {!user && <Route path="/login" element={<LoginPage />} />}
       {!user && <Route path="/register" element={<RegisterPage />} />}
 
