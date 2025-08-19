@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import { fetchTripById } from "../api/trips";
@@ -14,6 +14,7 @@ import { AuthContext } from "../context/AuthContext";
 
 const TripDetailsPage = () => {
   const { tripId } = useParams();
+  const navigate = useNavigate();
   const [trip, setTrip] = useState(null);
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -90,8 +91,7 @@ const TripDetailsPage = () => {
   const MapClickHandler = () => {
     useMapEvents({
       click(e) {
-        if (!isOwner) return; 
-  
+        if (!isOwner) return;
         const newLocation = { lat: e.latlng.lat, lng: e.latlng.lng, name: "Custom Location" };
         setActivityLocation(newLocation);
         setShowActivityForm(true);
@@ -99,7 +99,6 @@ const TripDetailsPage = () => {
     });
     return null;
   };
-  
 
   const handleActivitySelect = (activityId) => {
     setSelectedActivityId(activityId);
@@ -136,10 +135,19 @@ const TripDetailsPage = () => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-8 flex flex-col md:flex-row gap-6 bg-white dark:bg-gray-900 text-black dark:text-white">
-      <div className="md:w-1/3 dark:bg-gray-900 text-black bg-white dark:text-white rounded-lg shadow-md p-20 overflow-y-auto max-h-[80vh]">
-        <h1 className="text-2xl font-bold mb-4">{city}, {country}</h1>
+    <div className="max-w-6xl mx-auto p-30 flex flex-col md:flex-row gap-6 bg-white dark:bg-gray-900 text-black dark:text-white">
+      {/* Sidebar */}
+      <div className="md:w-1/3 dark:bg-gray-900 text-black bg-white dark:text-white rounded-lg shadow-md p-6 overflow-y-auto max-h-[80vh]">
+        <button
+          onClick={() => navigate("/dashboard")}
+          className="mb-4 px-4 py-2 bg-gray-300 dark:bg-gray-700 text-black dark:text-white rounded hover:bg-gray-400 dark:hover:bg-gray-600"
+        >
+          &larr; Back
+        </button>
+
+        <h1 className="text-2xl font-bold mb-2">{city}, {country}</h1>
         <p className="mb-4 text-gray-700 dark:text-gray-300">{description}</p>
+
         <h2 className="text-xl font-semibold mb-2">Activities</h2>
         {activities.length === 0 ? (
           <p className="text-gray-500">No activities found for this trip.</p>
@@ -168,6 +176,7 @@ const TripDetailsPage = () => {
         )}
       </div>
 
+      {/* Map */}
       <div className="md:w-2/3 h-[80vh] rounded-lg overflow-hidden shadow-md relative">
         <div className="absolute top-4 left-4 right-4 z-[1000]">
           <LocationSearch
@@ -224,49 +233,27 @@ const TripDetailsPage = () => {
               </Marker>
             ) : null
           )}
-
-          {searchedLocation && (
-            <Marker position={[searchedLocation.lat, searchedLocation.lng]}>
-              <Popup>
-                <div>{locationName || "Selected Location"}</div>
-                {isOwner && (
-                  <button
-                    onClick={() => {
-                      setActivityLocation({ lat: searchedLocation.lat, lng: searchedLocation.lng });
-                      setShowActivityForm(true);
-                    }}
-                    className="mt-2 px-4 py-2 bg-green-500 text-white rounded"
-                  >
-                    Add Activity
-                  </button>
-                )}
-              </Popup>
-            </Marker>
-          )}
         </MapContainer>
+
+        {showActivityForm && (
+          <ActivityForm
+            tripId={tripId}
+            activityLocation={activityLocation || searchedLocation}
+            onClose={() => { setShowActivityForm(false); setActivityLocation(null); }}
+            onSave={refreshActivities}
+            editingActivity={editingActivity}
+            setEditingActivity={setEditingActivity}
+          />
+        )}
+
+        {showConfirmModal && (
+          <ConfirmModal
+            message="Are you sure you want to delete this activity?"
+            onConfirm={handleDeleteConfirmed}
+            onCancel={() => setShowConfirmModal(false)}
+          />
+        )}
       </div>
-
-      {(showActivityForm || editingActivity) && (
-        <ActivityForm
-          location={activityLocation || (editingActivity && { lat: editingActivity.lat, lng: editingActivity.lng })}
-          closeForm={() => {
-            setShowActivityForm(false);
-            setEditingActivity(null);
-          }}
-          tripId={trip.id}
-          refreshActivities={refreshActivities}
-          loading={loading}
-          existingActivity={editingActivity}
-        />
-      )}
-
-      {showConfirmModal && (
-        <ConfirmModal
-          message="Are you sure you want to delete this activity?"
-          onConfirm={handleDeleteConfirmed}
-          onCancel={() => setShowConfirmModal(false)}
-        />
-      )}
     </div>
   );
 };
