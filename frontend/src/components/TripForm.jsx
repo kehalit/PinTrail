@@ -2,9 +2,11 @@ import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { toast } from "react-hot-toast";
 import { createTrip, updateTrip } from "../api/trips";
+import { uploadPhotos } from "../api/photos";
 
-const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
+const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip, resetSelectedLocation }) => {
   const { user } = useContext(AuthContext);
+
   const [formData, setFormData] = useState({
     title: "",
     country: "",
@@ -18,15 +20,16 @@ const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
     lng: location?.lng,
     user_id: user?.id,
   });
-  // State to hold selected photo files
+
   const [photos, setPhotos] = useState([]);
+
   useEffect(() => {
     if (editingTrip) {
       setFormData({
         ...editingTrip,
         user_id: user?.id,
       });
-      setPhotos([]); // optionally clear photos or fetch existing ones separately
+      setPhotos([]); // optionally fetch existing photos separately
     } else {
       setFormData((prev) => ({
         ...prev,
@@ -37,43 +40,23 @@ const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
       setPhotos([]);
     }
   }, [editingTrip, location, user]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    const fieldValue = type === "checkbox" ? checked : value;
-    setFormData((prev) => ({ ...prev, [name]: fieldValue }));
+    setFormData((prev) => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
   };
+
   const handlePhotoChange = (e) => {
-    setPhotos(Array.from(e.target.files));
+    setPhotos((prev) => [...prev, ...Array.from(e.target.files)]);
   };
 
-  // Helper: upload photos individually linked to tripId
-  const uploadPhotos = async (tripId) => {
-    const uploadPromises = photos.map(async (photo) => {
-        const photoData = new FormData();
-        photoData.append("file", photo);
-        photoData.append("caption", `Photo for trip ${tripId}`)
-
-        const response = await fetch(`http://127.0.0.1:5000/photos/upload/${tripId}`, {
-            method:"POST",
-            body: photoData
-        });
-
-        if (!response.ok){
-            const err = await response.json();
-            throw new Error(`Failed to upload ${photo.name}`);
-        }
-        return response.json();
-    });
-
-    const results = await Promise.allSettled(uploadPromises);
-    const failedUploads = results.filter((result) => result.status == 'rejected');
-
-
+  const handlePhotoDelete = (index) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Prepare trip data without photos
       const tripPayload = {
         title: formData.title,
         country: formData.country,
@@ -87,28 +70,35 @@ const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
         lng: formData.lng,
         user_id: formData.user_id,
       };
+
       let trip;
       if (editingTrip) {
-        // Update trip without photos first
         trip = await updateTrip(editingTrip.id, tripPayload);
         toast.success("Trip updated successfully!");
       } else {
-        // Create trip without photos first
         trip = await createTrip(tripPayload);
         toast.success("Trip added successfully!");
       }
-      // Upload photos separately only if there are any
+
       if (photos.length > 0) {
-        await uploadPhotos(trip.id);
+        const uploadedPhotos = await uploadPhotos(trip.id, photos);
+        console.log("Uploaded photos:", uploadedPhotos);
         toast.success("Photos uploaded successfully!");
       }
+
       setRefreshTrips((prev) => !prev);
       closeForm();
+
+      // Reset selected location, map, and search input
+      if (typeof resetSelectedLocation === "function") {
+        resetSelectedLocation();
+      }
     } catch (error) {
       console.error("Error submitting form:", error);
       toast.error(error.message || "An unexpected error occurred.");
     }
   };
+
   return (
     <div className="fixed top-0 left-0 w-full h-full backdrop-blur-sm bg-white/10 flex items-center justify-center z-[9999]">
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-md w-full text-black dark:text-white">
@@ -200,7 +190,7 @@ const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
             />
             <label>Public Trip</label>
           </div>
-          {/* Photo upload input */}
+
           <div>
             <label className="block text-sm font-medium mb-1">Photos</label>
             <input
@@ -213,24 +203,38 @@ const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
             {photos.length > 0 && (
               <div className="flex space-x-2 mt-2 overflow-x-auto">
                 {photos.map((photo, index) => (
-                  <img
-                    key={index}
-                    src={URL.createObjectURL(photo)}
-                    alt={`Preview ${index + 1}`}
-                    className="w-16 h-16 object-cover rounded"
-                    onLoad={(e) => URL.revokeObjectURL(e.target.src)}
-                  />
+                  <div key={index} className="relative">
+                    <img
+                      src={URL.createObjectURL(photo)}
+                      alt={`Preview ${index + 1}`}
+                      className="w-16 h-16 object-cover rounded"
+                      onLoad={(e) => URL.revokeObjectURL(e.target.src)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handlePhotoDelete(index)}
+                      className="absolute top-0 right-0 bg-red-500 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center"
+                    >
+                      ×
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
           </div>
+
           <div className="flex justify-end space-x-2">
             <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded">
               {editingTrip ? "Update Trip" : "Save Trip"}
             </button>
             <button
-              onClick={closeForm}
               type="button"
+              onClick={() => {
+                closeForm();
+                if (typeof resetSelectedLocation === "function") {
+                  resetSelectedLocation();
+                }
+              }}
               className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded"
             >
               Cancel
@@ -241,4 +245,5 @@ const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip }) => {
     </div>
   );
 };
+
 export default TripForm;
