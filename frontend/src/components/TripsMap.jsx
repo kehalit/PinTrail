@@ -1,14 +1,13 @@
 import React, { useContext, useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMapEvents, useMap } from "react-leaflet";
 import { AuthContext } from "../context/AuthContext";
+import { ThemeContext } from "../context/ThemeContext";
 import { toast } from "react-hot-toast";
 import { fetchTripsByUserId, deleteTrip } from "../api/trips";
+import { getUserPhotos } from "../api/photos";
 import { useNavigate } from "react-router-dom";
 import ConfirmModal from "../components/ConfirmModal";
-import { ThemeContext } from "../context/ThemeContext";
-import { getUserPhotos } from "../api/photos";
-
-
+import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
 
 const TripsMap = ({
   setTripForm,
@@ -22,16 +21,18 @@ const TripsMap = ({
   mapZoom,
   setLocalClickedLocation,
   showDeleteModal,
-  setShowDeleteModal
-
+  setShowDeleteModal,
 }) => {
-  const [trips, setTrips] = useState([]);
   const { user } = useContext(AuthContext);
+  const { theme } = useContext(ThemeContext);
+  const navigate = useNavigate();
+
+  const [trips, setTrips] = useState([]);
   const [tripToDelete, setTripToDelete] = useState(null);
 
-  const { theme } = useContext(ThemeContext);
-
-  const navigate = useNavigate();
+  // Album overlay state
+  const [selectedTripForAlbum, setSelectedTripForAlbum] = useState(null);
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -43,11 +44,10 @@ const TripsMap = ({
         const tripsWithPhotos = await Promise.all(
           tripsData.map(async (trip) => {
             const photos = await getUserPhotos(trip.id);
-            return { ...trip, photos }; // attach photos to each trip
+            return { ...trip, photos };
           })
         );
 
-        console.log("Trips with photos:", tripsWithPhotos);
         setTrips(tripsWithPhotos);
       } catch (error) {
         console.error("Error fetching trips or photos:", error);
@@ -57,6 +57,11 @@ const TripsMap = ({
 
     loadTripsWithPhotos();
   }, [user, refreshTrips]);
+
+  // Reset photo index whenever a new album opens
+  useEffect(() => {
+    setCurrentPhotoIndex(0);
+  }, [selectedTripForAlbum]);
 
   const MapClickHandler = () => {
     useMapEvents({
@@ -99,11 +104,15 @@ const TripsMap = ({
 
   return (
     <div>
-      <MapContainer center={[40, -1]} zoom={3} style={{
-        height: "80vh",
-        width: "100vw",
-        filter: theme === "dark" ? "brightness(1)" : "brightness(0.6)",
-      }} >
+      <MapContainer
+        center={[40, -1]}
+        zoom={3}
+        style={{
+          height: "80vh",
+          width: "100vw",
+          filter: theme === "dark" ? "brightness(1)" : "brightness(0.6)",
+        }}
+      >
         <ChangeMapView center={mapCenter} zoom={mapZoom} />
         <TileLayer
           url={
@@ -119,7 +128,7 @@ const TripsMap = ({
             <Marker key={trip.id} position={[trip.lat, trip.lng]}>
               <Popup>
                 <div className="text-center">
-                  <h3
+                <h3
                     className="font-bold text-blue-600 cursor-pointer hover:underline"
                     onClick={() => navigate(`/trips/${trip.id}`)}
                   >
@@ -129,10 +138,9 @@ const TripsMap = ({
                   <p>{trip.description}</p>
                   <p><strong>Start:</strong> {trip.start_date} | <strong>End:</strong> {trip.end_date}</p>
 
-                  {/* Photos */}
                   {trip.photos && trip.photos.length > 0 && (
                     <div className="flex flex-wrap justify-center mt-2 gap-2">
-                      {trip.photos.map(photo => (
+                      {trip.photos.slice(0, 3).map(photo => (
                         <img
                           key={photo.id}
                           src={photo.url}
@@ -140,21 +148,19 @@ const TripsMap = ({
                           className="w-16 h-16 object-cover rounded shadow-sm"
                         />
                       ))}
-                      {trip.photos.length > 2 && (
+                      {trip.photos.length > 3 && (
                         <button
-                          onClick={() => navigate(`/trips/${trip.id}/album`)}
+                          onClick={() => setSelectedTripForAlbum(trip)}
                           className="px-2 py-1 bg-blue-500 text-white rounded text-sm mt-1"
                         >
-                          +{trip.photos.length - 2} more
+                          +{trip.photos.length - 3} more
                         </button>
                       )}
                     </div>
                   )}
-                  <div className="flex justify-center space-x-2 mt-2">
-                    <button
-                      onClick={() => handleEdit(trip)}
-                      className="px-3 py-1 bg-yellow-500 text-white rounded">
 
+                  <div className="flex justify-center space-x-2 mt-2">
+                    <button onClick={() => handleEdit(trip)} className="px-3 py-1 bg-yellow-500 text-white rounded">
                       Edit
                     </button>
                     <button
@@ -200,9 +206,103 @@ const TripsMap = ({
         />
       )}
 
+      {/* Trip Album Overlay */}
+      {selectedTripForAlbum && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex flex-col items-center justify-center z-50 p-4">
+          <button
+            className="self-end mb-4 px-4 py-2 bg-red-500 text-white rounded"
+            onClick={() => setSelectedTripForAlbum(null)}
+          >
+            Close
+          </button>
 
+          <DragDropContext
+            onDragEnd={(result) => {
+              if (!result.destination) return;
+              const reorderedPhotos = Array.from(selectedTripForAlbum.photos);
+              const [moved] = reorderedPhotos.splice(result.source.index, 1);
+              reorderedPhotos.splice(result.destination.index, 0, moved);
+              setSelectedTripForAlbum({ ...selectedTripForAlbum, photos: reorderedPhotos });
+              reorderTripPhotos(selectedTripForAlbum.id, reorderedPhotos.map(p => p.id)); // persist order
+            }}
+          >
+            <Droppable droppableId="photos" direction="horizontal">
+              {(provided) => (
+                <div
+                  className="flex gap-2 overflow-x-auto w-full max-w-4xl"
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                >
+                  {selectedTripForAlbum.photos.map((photo, index) => (
+                    <Draggable key={photo.id} draggableId={photo.id.toString()} index={index}>
+                      {(provided) => (
+                        <div
+                          className="relative flex-shrink-0"
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                        >
+                          <img
+                            src={photo.url}
+                            alt={photo.caption || "Trip photo"}
+                            className="w-32 h-32 object-cover rounded shadow-lg"
+                          />
+                          <button
+                            className="absolute top-1 right-1 bg-red-500 text-white px-1 rounded"
+                            onClick={async () => {
+                              await deletePhoto(photo.id);
+                              setSelectedTripForAlbum({
+                                ...selectedTripForAlbum,
+                                photos: selectedTripForAlbum.photos.filter(p => p.id !== photo.id),
+                              });
+                            }}
+                          >
+                            Delete
+                          </button>
+                          <input
+                            type="text"
+                            value={photo.caption || ""}
+                            placeholder="Add caption"
+                            className="w-full mt-1 text-sm text-black rounded p-1"
+                            onChange={(e) => {
+                              const newPhotos = [...selectedTripForAlbum.photos];
+                              newPhotos[index].caption = e.target.value;
+                              setSelectedTripForAlbum({ ...selectedTripForAlbum, photos: newPhotos });
+                            }}
+                            onBlur={async (e) => {
+                              await updatePhotoCaption(photo.id, e.target.value);
+                            }}
+                          />
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+
+          <div className="mt-4 flex items-center gap-2">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const uploadedPhoto = await uploadPhoto(selectedTripForAlbum.id, file);
+                setSelectedTripForAlbum({
+                  ...selectedTripForAlbum,
+                  photos: [...selectedTripForAlbum.photos, uploadedPhoto],
+                });
+              }}
+              className="text-white"
+            />
+            <span className="text-white">Upload a photo</span>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
+}
 export default TripsMap;
