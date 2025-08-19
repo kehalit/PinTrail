@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { debounce } from "lodash";
 
-const LocationSearch = ({ setMapCenter, setSearchedLocation, setLocationName, setMapZoom, searchQuery, setSearchQuery }) => {
+const LocationSearch = ({ setMapCenter, setSearchedLocation, setLocationName, setMapZoom, searchQuery, setSearchQuery, resetLocation }) => {
   
   const [suggestions, setSuggestions] = useState([]);
 
@@ -50,6 +50,19 @@ const LocationSearch = ({ setMapCenter, setSearchedLocation, setLocationName, se
     setMapZoom(15);
     setSuggestions([]); 
   };
+  // Reset handler to be called from parent
+  useEffect(() => {
+    if (resetLocation) {
+      resetLocation.current = () => {
+        setSearchQuery("");
+        setSuggestions([]);
+        setSearchedLocation(null);
+        setLocationName("");
+        setMapCenter([0, 0]); // or default center
+        setMapZoom(2); // or default zoom
+      };
+    }
+  }, [resetLocation, setMapCenter, setMapZoom, setSearchedLocation, setLocationName, setSearchQuery]);
 
   return (
     <div className="relative max-w-md mx-auto mt-2 mb-6 z-50 dark:bg-gray-900 text-black dark:text-white">

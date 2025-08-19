@@ -16,7 +16,12 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-
+  // Function to reset the selected location and search query
+  const resetLocationSearch = () => {
+    setSelectedLocation(null);
+    setLocationName("");
+    setSearchQuery("");
+  };
 
   return (
     <div className="pt-28 px-4 min-h-screen bg-gray-50 dark:bg-gray-900 text-black dark:text-white">
@@ -27,23 +32,30 @@ const Dashboard = () => {
           setMapCenter={setMapCenter}
           setSearchedLocation={setSelectedLocation}
           setLocationName={setLocationName}
-          setMapZoom={setMapZoom} 
+          setMapZoom={setMapZoom}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
         />
       </div>
-       {/* Trip Form */}
-    {tripFormOpen && selectedLocation ? (
-      <TripForm
-        location={selectedLocation}
-        closeForm={() => {
-          setTripFormOpen(false);
-          setEditingTrip(null);
-        }}
-        setRefreshTrips={setRefreshTrips}
-        editingTrip={editingTrip}
-      />
-    ) : null}
+      {/* Trip Form */}
+      {tripFormOpen && selectedLocation ? (
+        <TripForm
+          location={selectedLocation}
+          closeForm={() => {
+            setTripFormOpen(false);
+            setEditingTrip(null);
+          }}
+          setRefreshTrips={setRefreshTrips}
+          editingTrip={editingTrip}
+          resetSelectedLocation={() => {
+            setSelectedLocation(null);
+            setLocationName("");
+            setSearchQuery("");
+            setMapCenter([20, 0]); // Reset map center
+            setMapZoom(3);         // Reset map zoom
+          }}
+        />
+      ) : null}
 
       {/* Map */}
       <div className="relative z-0">
@@ -60,11 +72,11 @@ const Dashboard = () => {
           showSearchPin={selectedLocation !== null && locationName !== ""}
           localClickedLocation={localClickedLocation}
           setLocalClickedLocation={setLocalClickedLocation}
-          showDeleteModal ={showDeleteModal}
-          setShowDeleteModal ={setShowDeleteModal}
+          showDeleteModal={showDeleteModal}
+          setShowDeleteModal={setShowDeleteModal}
 
         />
-      </div> 
+      </div>
     </div>
   );
 };
