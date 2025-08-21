@@ -7,7 +7,7 @@ import { fetchTripsByUserId, deleteTrip } from "../api/trips";
 import { getUserPhotos } from "../api/photos";
 import { useNavigate } from "react-router-dom";
 import ConfirmModal from "../components/ConfirmModal";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd"
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
 const TripsMap = ({
   setTripForm,
