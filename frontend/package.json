@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@changey/react-leaflet-markercluster": "^4.0.0-rc1",
+    "@hello-pangea/dnd": "^18.0.1",
     "@react-google-maps/api": "^2.20.6",
     "@tailwindcss/vite": "^4.1.7",
     "axios": "^1.9.0",
