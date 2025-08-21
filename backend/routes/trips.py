@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, current_app
-from backend.utils.validates import validate_fields
+from utils.validates import validate_fields
 from datetime import datetime
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -247,8 +247,10 @@ def get_trips_by_user(user_id):
                         "rating": a.rating,
                         "trip_id": a.trip_id
                     } for a in trip.activities
-                ]
-            } for trip in trips
+                ],
+                "photos": db.get_photos_by_trip_id(trip.id)
+
+                } for trip in trips
         ]), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
