@@ -1,14 +1,9 @@
-
-import api from '../utils/api';
-
-
-const BASE_URL = "http://127.0.0.1:5000/trips";
+import api from "../utils/api";
 
 // Fetch all trips
 export async function fetchAllTrips() {
-    const response = await fetch(BASE_URL); 
-    if (!response.ok) throw new Error("Failed to fetch trips");
-    return response.json();
+  const response = await api.get("/trips");
+  return response.data;
 }
 
 // Fetch trips by user ID
@@ -22,38 +17,24 @@ export async function fetchTripsByUserId(userId) {
 
 // Fetch a single trip by ID
 export async function fetchTripById(tripId) {
-    const response = await fetch(`${BASE_URL}/${tripId}`);
-    if (!response.ok) throw new Error("Trip not found");
-    return response.json();
+  const response = await api.get(`/trips/${tripId}`);
+  return response.data;
 }
 
 // Create a new trip
 export async function createTrip(tripData) {
-    const response = await fetch(`${BASE_URL}/add_trip`, { 
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(tripData),
-    });
-    if (!response.ok) throw new Error("Failed to create trip");
-    return response.json();
+  const response = await api.post("/trips/add_trip", tripData);
+  return response.data;
 }
 
 // Update an existing trip
 export async function updateTrip(tripId, tripData) {
-    const response = await fetch(`${BASE_URL}/${tripId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(tripData),
-    });
-    if (!response.ok) throw new Error("Failed to update trip");
-    return response.json();
+  const response = await api.put(`/trips/${tripId}`, tripData);
+  return response.data;
 }
 
 // Delete a trip
 export async function deleteTrip(tripId) {
-    const response = await fetch(`${BASE_URL}/${tripId}`, {
-        method: "DELETE",
-    });
-    if (!response.ok) throw new Error("Failed to delete trip");
-    return response.json();
+  const response = await api.delete(`/trips/${tripId}`);
+  return response.data;
 }
