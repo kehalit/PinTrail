@@ -20,6 +20,8 @@ load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 SUPABASE_BUCKET_NAME = os.getenv("SUPABASE_BUCKET_NAME")
+SECRET_KEY = os.getenv("SECRET_KEY")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise Exception("SUPABASE_URL or SUPABASE_KEY is not set in environment variables.")
@@ -30,8 +32,8 @@ from flask import send_from_directory
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = "super-secret-key"
-app.config['JWT_SECRET_KEY'] = "super-secret-jwt-key"
+app.config['SECRET_KEY'] = SECRET_KEY
+app.config['JWT_SECRET_KEY'] = JWT_SECRET_KEY
 app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(seconds=3600)
 app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=7)
 
@@ -41,7 +43,7 @@ app.config["SUPABASE_BUCKET_NAME"] = SUPABASE_BUCKET_NAME
 
 
 # allow all origins
-CORS(app, supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 
 jwt = JWTManager(app)
