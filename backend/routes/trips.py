@@ -218,7 +218,7 @@ def get_trips_by_user(user_id):
         current_user_id = int(get_jwt_identity())
 
         if current_user_id != user_id:
-            return jsonify({"error": "Unauthorized access"}), 403
+           return jsonify({"error": "Unauthorized access"}), 403
 
         db = current_app.config["db_manager"]
         trips = db.get_trips_by_user_id(user_id)
