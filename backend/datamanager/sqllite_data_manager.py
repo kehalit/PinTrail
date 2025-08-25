@@ -18,7 +18,7 @@ database_path = os.path.join(basedir,'database', 'pintrail.db')
 class SQLiteDataManager(DataManagerInterface):
     def __init__(self, app):
         """Initialize the data manager with Flask app and configure the database."""
-        app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{database_path}'
+        app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
         app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
         self.supabase: Client = app.config['supabase']
         self.bucket_name = app.config['SUPABASE_BUCKET_NAME']
@@ -26,16 +26,6 @@ class SQLiteDataManager(DataManagerInterface):
 
         with app.app_context():
             db.create_all()
-
-    def get_connection(self):
-        """Return a SQLite connection to the configured DB path."""
-        conn = sqlite3.connect(self.db_path)
-        conn.row_factory = sqlite3.Row  # allows dict-like access
-        return conn
-
-    def close_connection(self, exception=None):
-        # Optionally close connections if you're storing them in `g` or caching
-        pass
 
     def get_trips(self):
         return Trip.query.all()
