@@ -43,7 +43,11 @@ app.config["SUPABASE_BUCKET_NAME"] = SUPABASE_BUCKET_NAME
 
 
 # allow all origins
-CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
+CORS(app,
+     resources={r"/*": {"origins": "http://localhost:5173"}}, # set exact frontend origin instead of *
+     supports_credentials=True,
+     allow_headers=["Content-Type", "Authorization"],
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
 
 
 jwt = JWTManager(app)
@@ -108,6 +112,12 @@ def home():
 @app.before_request
 def log_request_info():
     print("Authorization header:", request.headers.get('Authorization'))
+
+@app.before_request
+def handle_options():
+    if request.method == "OPTIONS":
+        return '', 200
+
 
 
 
