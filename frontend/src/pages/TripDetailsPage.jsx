@@ -224,7 +224,7 @@ const TripDetailsPage = () => {
                     <p>Rating: {act.rating}</p>
                     {isOwner && (
                       <div className="flex justify-center space-x-2 mt-2">
-                        <button onClick={() => setEditingActivity(act)} className="px-3 py-2 bg-yellow-500 text-white rounded">Edit</button>
+                        <button onClick={() => {setEditingActivity(act); setShowActivityForm(true)}}  className="px-3 py-2 bg-yellow-500 text-white rounded">Edit</button>
                         <button onClick={(e) => { e.stopPropagation(); setActivityToDelete(act.id); setShowConfirmModal(true); }} className="px-3 py-2 bg-red-500 text-white rounded">Delete</button>
                       </div>
                     )}

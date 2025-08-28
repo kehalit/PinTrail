@@ -79,7 +79,7 @@ const Header = ({ popupOpen }) => {
             {/* Right Side */}
             <div className="hidden md:flex items-center space-x-4">
                 <button onClick={toggleTheme}>
-                    {theme === 'light' ? '🌙 Dark Mode' : '☀️ Light Mode'}
+                    {theme === 'light' ? ' 🌙 ' : ' ☀️ '}
                 </button>
                 {!user ? (
                     <>
