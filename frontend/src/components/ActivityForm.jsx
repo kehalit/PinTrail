@@ -8,7 +8,7 @@ const activityTypes = [
 ];
 
 const ActivityForm = ({
-  location = {},
+  activityLocation = {},
   onClose = () => {},
   tripId,
   onSave = async () => {},
@@ -21,8 +21,8 @@ const ActivityForm = ({
     notes: editingActivity?.notes || "",
     cost: editingActivity?.cost ?? "",
     rating: editingActivity?.rating ?? "",
-    lat: editingActivity?.lat ?? location.lat ?? "",
-    lng: editingActivity?.lng ?? location.lng ?? "",
+    lat: editingActivity?.lat ?? activityLocation.lat ?? "",
+    lng: editingActivity?.lng ?? activityLocation.lng ?? "",
     trip_id: editingActivity?.trip_id ?? tripId
   });
 
