@@ -8,6 +8,21 @@ import { getUserPhotos } from "../api/photos";
 import { useNavigate } from "react-router-dom";
 import ConfirmModal from "../components/ConfirmModal";
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import TripPopupCard from "../components/TripPopupCard";
+
+
+const redIcon = new L.Icon({
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
 
 const TripsMap = ({
   setTripForm,
@@ -107,11 +122,14 @@ const TripsMap = ({
       <MapContainer
         center={[40, -1]}
         zoom={3}
+        className="rounded-2xl shadow-lg border border-gray-100"
         style={{
           height: "80vh",
-          width: "100vw",
+          width: "95vw",
+          margin: "auto",
           filter: theme === "dark" ? "brightness(1)" : "brightness(0.6)",
-        }}
+        }
+        }
       >
         <ChangeMapView center={mapCenter} zoom={mapZoom} />
         <TileLayer
@@ -125,59 +143,25 @@ const TripsMap = ({
 
         {trips.map((trip) =>
           trip.lat && trip.lng ? (
-            <Marker key={trip.id} position={[trip.lat, trip.lng]}>
-              <Popup>
-                <div className="text-center">
-                <h3
-                    className="font-bold text-blue-600 cursor-pointer hover:underline"
-                    onClick={() => navigate(`/trips/${trip.id}`)}
-                  >
-                    {trip.title}
-                  </h3>
-                  <p>{trip.city}, {trip.country}</p>
-                  <p>{trip.description}</p>
-                  <p><strong>Start:</strong> {trip.start_date} | <strong>End:</strong> {trip.end_date}</p>
-
-                  {trip.photos && trip.photos.length > 0 && (
-                    <div className="flex flex-wrap justify-center mt-2 gap-2">
-                      {trip.photos.slice(0, 3).map(photo => (
-                        <img
-                          key={photo.id}
-                          src={photo.url}
-                          alt={photo.caption || "Trip photo"}
-                          className="w-16 h-16 object-cover rounded shadow-sm"
-                        />
-                      ))}
-                      {trip.photos.length > 3 && (
-                        <button
-                          onClick={() => setSelectedTripForAlbum(trip)}
-                          className="px-2 py-1 bg-blue-500 text-white rounded text-sm mt-1"
-                        >
-                          +{trip.photos.length - 3} more
-                        </button>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="flex justify-center space-x-2 mt-2">
-                    <button onClick={() => handleEdit(trip)} className="px-3 py-1 bg-yellow-500 text-white rounded">
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => {
-                        setTripToDelete(trip.id);
-                        setShowDeleteModal(true);
-                      }}
-                      className="px-4 py-2 bg-red-500 text-white rounded"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
+            <Marker key={trip.id} position={[trip.lat, trip.lng]} icon={redIcon}>
+              <Popup minWidth={300} maxWidth={300}>
+                <TripPopupCard
+                  trip={trip}
+                  onEdit={(trip) => {
+                    setSelectedLocation({ lat: trip.lat, lng: trip.lng, name: trip.title });
+                    setEditingTrip(trip);
+                    setTripForm(true);
+                  }}
+                  onDelete={(tripId) => {
+                    setTripToDelete(tripId);
+                    setShowDeleteModal(true);
+                  }}
+                />
               </Popup>
             </Marker>
           ) : null
         )}
+
 
         {selectedLocation && (
           <Marker position={[selectedLocation.lat, selectedLocation.lng]}>
