@@ -53,8 +53,8 @@ const TripForm = ({ location, closeForm, setRefreshTrips, editingTrip, resetSele
   const handlePhotoDelete = (index) => {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
-
-  const handleSubmit = async (e) => {
+  
+  const handleSubmit = async (e) => {    
     e.preventDefault();
     try {
       const tripPayload = {
