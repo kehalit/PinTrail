@@ -116,7 +116,7 @@ def add_new_trip():
         return jsonify({"error": str(e)}), 400
 
 
-@trips_bp.route("/", methods=["GET"])
+@trips_bp.route("/", methods=["GET", "OPTIONS"])
 def get_trips():
     """
     Get all trips
