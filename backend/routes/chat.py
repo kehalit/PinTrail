@@ -1,55 +1,72 @@
-from flask import Blueprint, request, jsonify
-import requests
-import os
+from flask import Flask, Blueprint, request, jsonify
 
-chat_bp = Blueprint('chat', __name__)
+chat_bp = Blueprint("chat", __name__)
 
-# Hugging Face DialoGPT model endpoint
-HUGGINGFACE_API_URL = "https://api-inference.huggingface.co/models/microsoft/DialoGPT-small"
-HUGGINGFACE_API_KEY = os.getenv("HF_API_KEY")
-
-if not HUGGINGFACE_API_KEY:
-    raise ValueError("HF_API_KEY environment variable is not set!")
-
-headers = {
-    "Authorization": f"Bearer {HUGGINGFACE_API_KEY}"
+# Menu structure
+MENU = {
+    "start": {
+        "message": "Hi! How can I help you today? Choose an option:",
+        "options": [
+            "Account",
+            "Trips",
+            "Photos"
+        ]
+    },
+    "Account": {
+        "message": "Account options:",
+        "options": ["How to sign up", "Back to main menu"]
+    },
+    "How to sign up": {
+        "message": "To sign up, go to /register",
+        "options": ["Back to Account menu", "Back to main menu"]
+    },
+    "Trips": {
+        "message": "Trips options:",
+        "options": ["Add a trip", "Edit a trip", "Delete a trip", "Back to main menu"]
+    },
+    "Add a trip": {
+        "message": "To add a trip, go to /add-trip and fill in the details.",
+        "options": ["Back to Trips menu", "Back to main menu"]
+    },
+    "Edit a trip": {
+        "message": "To edit a trip, go to /my-trips and click 'Edit'.",
+        "options": ["Back to Trips menu", "Back to main menu"]
+    },
+    "Delete a trip": {
+        "message": "To delete a trip, go to /my-trips and click 'Delete'.",
+        "options": ["Back to Trips menu", "Back to main menu"]
+    },
+    "Photos": {
+        "message": "Photo options:",
+        "options": ["How to add photos", "Back to main menu"]
+    },
+    "How to add photos": {
+        "message": "Add photos when creating or editing a trip. Click 'Add Photo'.",
+        "options": ["Back to Photos menu", "Back to main menu"]
+    },
+    "Back to main menu": "start",
+    "Back to Account menu": "Account",
+    "Back to Trips menu": "Trips",
+    "Back to Photos menu": "Photos"
 }
 
 @chat_bp.route("/api/chat", methods=["POST"])
 def chat():
-    try:
-        data = request.get_json()
-        messages = data.get("messages", [])
-        user_input = messages[-1]["content"] if messages else "Hello!"
+    data = request.get_json(force=True)
+    last_choice = data.get("last_choice", "start")
 
-        payload = {
-            "inputs": user_input,
-            "parameters": {"max_new_tokens": 50}  # Controls the length of the response
+    # Follow redirects like "Back to main menu"
+    if last_choice in MENU and isinstance(MENU[last_choice], str):
+        last_choice = MENU[last_choice]
+
+    reply_data = MENU.get(last_choice, MENU["start"])
+
+    return jsonify({
+        "reply": {
+            "role": "bot",
+            "content": reply_data["message"],
+            "options": reply_data.get("options", [])
         }
+    })
 
-        res = requests.post(HUGGINGFACE_API_URL, headers=headers, json=payload)
-        print("Hugging Face API response:", res.status_code, res.text)
 
-        if res.status_code != 200:
-            return jsonify({"error": f"Error code: {res.status_code} - {res.text}"}), res.status_code
-
-        output = res.json()
-
-        # Robust parsing: handle list or dict response
-        if isinstance(output, list) and "generated_text" in output[0]:
-            generated_text = output[0]["generated_text"]
-        elif isinstance(output, dict) and "generated_text" in output:
-            generated_text = output["generated_text"]
-        else:
-            # Fallback if the structure is different
-            generated_text = str(output)
-
-        return jsonify({
-            "reply": {
-                "role": "bot",
-                "content": generated_text
-            }
-        })
-
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
