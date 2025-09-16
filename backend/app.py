@@ -44,10 +44,7 @@ app.config["SUPABASE_BUCKET_NAME"] = SUPABASE_BUCKET_NAME
 
 # allow all origins
 CORS(app,
-     resources={r"/*": {"origins": [
-            "http://localhost:5173",
-            "https://pin-trail.vercel.app/"
-        ]}}, # set exact frontend origin instead of *
+     origins = [ "http://localhost:5173","https://pin-trail.vercel.app/"], # set exact frontend origin instead of *
      supports_credentials=True,
      allow_headers=["Content-Type", "Authorization"],
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
@@ -109,17 +106,6 @@ def home():
     return "Welcome to PinTrail API!"
 
 
-@app.before_request
-def handle_request_info_and_options():
-    # Log useful request info
-    print(f"Request method: {request.method}")
-    print(f"Request path: {request.path}")
-    print(f"Authorization header: {request.headers.get('Authorization')}")
-    print(f"Origin: {request.headers.get('Origin')}")
-
-    # Handle CORS preflight requests (OPTIONS)
-    if request.method == "OPTIONS":
-        return '', 200
 
 
 
