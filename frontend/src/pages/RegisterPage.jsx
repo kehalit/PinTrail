@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 
+
+
 const RegisterPage = () => {
+  const API_URL = import.meta.env.VITE_API_URL 
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -23,7 +26,7 @@ const RegisterPage = () => {
     }
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/users/", {
+      const response = await fetch(`${API_URL}/users/`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
