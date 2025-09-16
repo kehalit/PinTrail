@@ -44,10 +44,10 @@ app.config["SUPABASE_BUCKET_NAME"] = SUPABASE_BUCKET_NAME
 
 # allow all origins
 CORS(app,
-     origins = [ "http://localhost:5173","https://pin-trail.vercel.app/"], # set exact frontend origin instead of *
-     allow_credentials=True,
+     origins = [ "http://localhost:5173","https://pin-trail.vercel.app"], # set exact frontend origin instead of *
+     supports_credentials=True,
      allow_headers= ["*"],
-     allow_methods=["*"])
+     methods=["*"])
 
 
 jwt = JWTManager(app)
