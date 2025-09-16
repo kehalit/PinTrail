@@ -105,7 +105,17 @@ def home():
     """
     return "Welcome to PinTrail API!"
 
+@app.before_request
+def handle_request_info_and_options():
+    # Log useful request info
+    print(f"Request method: {request.method}")
+    print(f"Request path: {request.path}")
+    print(f"Authorization header: {request.headers.get('Authorization')}")
+    print(f"Origin: {request.headers.get('Origin')}")
 
+    # Handle CORS preflight requests (OPTIONS)
+    if request.method == "OPTIONS":
+        return '', 200
 
 
 
