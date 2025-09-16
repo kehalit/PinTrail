@@ -44,7 +44,10 @@ app.config["SUPABASE_BUCKET_NAME"] = SUPABASE_BUCKET_NAME
 
 # allow all origins
 CORS(app,
-     resources={r"/*": {"origins": "http://localhost:5173"}}, # set exact frontend origin instead of *
+     resources={r"/*": {"origins": [
+            "http://localhost:5173",
+            "https://pin-trail.vercel.app/"
+        ]}}, # set exact frontend origin instead of *
      supports_credentials=True,
      allow_headers=["Content-Type", "Authorization"],
      methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"])
@@ -93,10 +96,6 @@ def custom_invalid_token_response(callback):
 def custom_expired_token_response(jwt_header, jwt_payload):
     return jsonify({"error": "Token has expired"}), 401
 
-@app.before_request
-def log_request_info():
-    print(f"Request headers: {request.headers}")
-
 
 @app.route("/")
 def home():
@@ -109,15 +108,18 @@ def home():
     """
     return "Welcome to PinTrail API!"
 
-@app.before_request
-def log_request_info():
-    print("Authorization header:", request.headers.get('Authorization'))
 
 @app.before_request
-def handle_options():
+def handle_request_info_and_options():
+    # Log useful request info
+    print(f"Request method: {request.method}")
+    print(f"Request path: {request.path}")
+    print(f"Authorization header: {request.headers.get('Authorization')}")
+    print(f"Origin: {request.headers.get('Origin')}")
+
+    # Handle CORS preflight requests (OPTIONS)
     if request.method == "OPTIONS":
         return '', 200
-
 
 
 
